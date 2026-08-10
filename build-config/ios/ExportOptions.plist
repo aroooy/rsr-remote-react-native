@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  iOS Archive Export Options for App Store Connect submission.
+  Used by `xcodebuild -exportArchive -exportOptionsPlist` in
+  docs/technical/07_development-guide.md (iOS release build Method B-2).
+
+  This file intentionally contains NO secrets. The teamID is a public
+  identifier of the Apple Developer account; signing certificates and
+  profiles are resolved automatically at export time.
+-->
+<plist version="1.0">
+<dict>
+  <key>method</key>
+  <string>app-store-connect</string>
+  <key>teamID</key>
+  <string>7M4D4YV3EN</string>
+  <key>signingStyle</key>
+  <string>automatic</string>
+  <key>uploadSymbols</key>
+  <true/>
+  <key>stripSwiftSymbols</key>
+  <true/>
+  <key>destination</key>
+  <string>export</string>
+</dict>
+</plist>

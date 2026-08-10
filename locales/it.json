@@ -1,0 +1,6 @@
+{
+  "NSBluetoothAlwaysUsageDescription": "RS-R Remote usa il Bluetooth per trovare, connettere e controllare la tua fotocamera GoPro.",
+  "NSBluetoothPeripheralUsageDescription": "RS-R Remote usa il Bluetooth per comunicare con la tua fotocamera GoPro.",
+  "NSLocationWhenInUseUsageDescription": "RS-R Remote usa la tua posizione per rilevare le fotocamere GoPro nelle vicinanze e connettersi al loro Wi-Fi.",
+  "NSLocalNetworkUsageDescription": "RS-R Remote si connette alla rete Wi-Fi della tua GoPro per trasmettere l'anteprima dal vivo."
+}

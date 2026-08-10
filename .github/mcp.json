@@ -1,0 +1,20 @@
+{
+  "servers": {
+    "expo": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "expo-mcp"
+      ]
+    },
+    "react-native": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@ohah/react-native-mcp-server"
+      ]
+    }
+  }
+}

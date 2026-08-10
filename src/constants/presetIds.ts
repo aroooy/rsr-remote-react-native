@@ -1,0 +1,120 @@
+/*
+ * Copyright (C) 2026 SPORT-SERVICE RS★R
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+export const PRESET_STANDARD = 0;
+export const PRESET_ACTIVITY = 1;
+export const PRESET_SLOMO = 3;
+
+export const PRESET_VIRTUAL_LOOPING = -1; // Virtual preset ID (Looping)
+
+export const PRESET_PHOTO = 65536;
+export const PRESET_LIVE_BURST = 65537;
+export const PRESET_BURST = 65538;
+export const PRESET_NIGHT_PHOTO = 65539;
+
+export const PRESET_MACRO_VIDEO = 2359296;
+export const PRESET_MACRO_PHOTO = 2424832;
+export const PRESET_MACRO_NIGHT_PHOTO = 2424835;
+export const PRESET_MACRO_TIMELAPSE = 2490368;
+export const PRESET_MACRO_NIGHTLAPSE = 2490369;
+export const PRESET_ANAMORPHIC_PHOTO = 2949120;
+export const PRESET_ANAMORPHIC_NIGHT_PHOTO = 2949123;
+
+export const PRESET_TIMEWARP = 131072;
+export const PRESET_TIMELAPSE = 131073;
+export const PRESET_NIGHTLAPSE = 131074;
+export const PRESET_STAR_TRAILS = 131075;
+export const PRESET_LIGHT_PAINTING = 131076;
+export const PRESET_VEHICLE_LIGHTS = 131077;
+
+export const PRESET_MAX_VIDEO = 196608;
+export const PRESET_MAX_PHOTO = 262144;
+export const PRESET_MAX_TIMEWARP = 327680;
+export const PRESET_MAX_TIMELAPSE = 327681;
+export const PRESET_MAX_NIGHTLAPSE = 393216;
+export const PRESET_MAX_VIDEO_2 = 983040;
+export const PRESET_MAX_PHOTO_2 = 1048576;
+
+export const PRESET_EASY_HIGHEST_QUALITY = 655360;
+export const PRESET_EASY_STANDARD_QUALITY = 655361;
+export const PRESET_EASY_BASIC_QUALITY = 655362;
+export const PRESET_EASY_EB_VIDEO = 720896;
+export const PRESET_EASY_LB_VIDEO = 917504;
+export const PRESET_EASY_MAX_VIDEO_1 = 1245184;
+export const PRESET_EASY_MAX_PHOTO_1 = 1310720;
+export const PRESET_EASY_MACRO_VIDEO = 2555904;
+export const PRESET_EASY_ANAMORPHIC_VIDEO = 3080192;
+export const PRESET_ANAMORPHIC_TIMEWARP = 3014656;
+
+export const PRESET_HERO11_EB_STANDARD_VIDEO = 524288;
+export const PRESET_HERO11_EB_ACTIVITY_VIDEO = 524289;
+export const PRESET_HERO11_EB_CINEMATIC_VIDEO = 524290;
+export const PRESET_HERO11_EB_SLO_MO_VIDEO = 524291;
+
+export const PRESET_HERO11_LB_STANDARD_VIDEO = 589824;
+export const PRESET_HERO11_LB_ACTIVITY_VIDEO = 589825;
+export const PRESET_HERO11_LB_CINEMATIC_VIDEO = 589826;
+export const PRESET_HERO11_LB_SLO_MO_VIDEO = 589827;
+
+export const PRESET_LEGACY_EASY_PHOTO = 786432;
+export const PRESET_LEGACY_EASY_NIGHT_PHOTO = 786433;
+export const PRESET_LEGACY_EASY_BURST_PHOTO = 786434;
+
+export const PRESET_LEGACY_EASY_TIMEWARP = 851968;
+export const PRESET_LEGACY_EASY_STAR_TRAILS = 851969;
+export const PRESET_LEGACY_EASY_LIGHT_PAINTING = 851970;
+export const PRESET_LEGACY_EASY_VEHICLE_LIGHTS = 851971;
+
+export const PRESET_MAX_TIMEWARP_2 = 1114112;
+export const PRESET_MAX_STAR_TRAILS_2 = 1114113;
+export const PRESET_MAX_LIGHT_PAINTING_2 = 1114114;
+export const PRESET_MAX_VEHICLE_LIGHTS_2 = 1114115;
+
+export const PRESET_EASY_MAX_VIDEO = 1441792;
+export const PRESET_EASY_MAX_PHOTO = 1507328;
+export const PRESET_EASY_MAX_TIMEWARP = 1572864;
+export const PRESET_EASY_MAX_STAR_TRAILS = 1572865;
+export const PRESET_EASY_MAX_LIGHT_PAINTING = 1572866;
+export const PRESET_EASY_MAX_VEHICLE_LIGHTS = 1572867;
+
+export const MAX_360_PRESET_IDS: ReadonlySet<number> = new Set([
+  PRESET_MAX_VIDEO,
+  PRESET_MAX_PHOTO,
+  PRESET_MAX_TIMEWARP,
+  PRESET_MAX_TIMELAPSE,
+  PRESET_MAX_NIGHTLAPSE,
+]);
+
+export const HERO12_EASY_QUALITY_PRESET_IDS: ReadonlySet<number> = new Set([
+  PRESET_EASY_HIGHEST_QUALITY,
+  PRESET_EASY_STANDARD_QUALITY,
+  PRESET_EASY_BASIC_QUALITY,
+]);
+
+export const MAX_TRAIL_2_PRESET_IDS: ReadonlySet<number> = new Set([
+  PRESET_MAX_STAR_TRAILS_2,
+  PRESET_MAX_LIGHT_PAINTING_2,
+  PRESET_MAX_VEHICLE_LIGHTS_2,
+  PRESET_EASY_MAX_STAR_TRAILS,
+  PRESET_EASY_MAX_LIGHT_PAINTING,
+  PRESET_EASY_MAX_VEHICLE_LIGHTS,
+]);

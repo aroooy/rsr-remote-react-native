@@ -1,0 +1,130 @@
+{
+  "expo": {
+    "name": "RS-R Remote",
+    "slug": "rsr-remote",
+    "version": "0.0.76",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "jp.co.rsr.rsrremote",
+      "buildNumber": "76",
+      "infoPlist": {
+        "UIStatusBarHidden": true,
+        "UIViewControllerBasedStatusBarAppearance": false,
+        "UISupportedInterfaceOrientations": [
+          "UIInterfaceOrientationPortrait"
+        ],
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ],
+        "UIBackgroundModes": [
+          "bluetooth-central"
+        ],
+        "NSBluetoothAlwaysUsageDescription": "RS-R Remote uses Bluetooth to find, connect to, and control your GoPro camera.",
+        "NSBluetoothPeripheralUsageDescription": "RS-R Remote uses Bluetooth to communicate with your GoPro camera.",
+        "NSLocationWhenInUseUsageDescription": "RS-R Remote uses your location to discover nearby GoPro cameras and connect to their Wi-Fi.",
+        "NSLocalNetworkUsageDescription": "RS-R Remote connects to your GoPro's Wi-Fi network to stream live preview video.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      },
+      "package": "jp.co.rs_r.rsrremote",
+      "versionCode": 76,
+      "permissions": [
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.BLUETOOTH_SCAN",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_WIFI_STATE",
+        "android.permission.CHANGE_WIFI_STATE",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"
+      ],
+      "blockedPermissions": [
+        "android.permission.BLUETOOTH_ADVERTISE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "locales": {
+      "en": "./locales/en.json",
+      "ja": "./locales/ja.json",
+      "es": "./locales/es.json",
+      "fr": "./locales/fr.json",
+      "de": "./locales/de.json",
+      "it": "./locales/it.json",
+      "pt": "./locales/pt.json",
+      "ko": "./locales/ko.json",
+      "zh": "./locales/zh.json",
+      "zh-Hant": "./locales/zh-TW.json"
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#000000",
+          "imageWidth": 240
+        }
+      ],
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": true,
+          "modes": [
+            "central"
+          ],
+          "bluetoothAlwaysPermission": "RS-R Remote uses Bluetooth to find, connect to, and control your GoPro camera."
+        }
+      ],
+      "expo-sqlite",
+      "react-native-wifi-reborn",
+      "react-native-vlc-media-player",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26,
+            "extraMavenRepos": [
+              "../../node_modules/@notifee/react-native/android/libs"
+            ]
+          },
+          "ios": {
+            "deploymentTarget": "16.4"
+          }
+        }
+      ],
+      "react-native-iap",
+      "./plugins/withReleaseSigning",
+      "./plugins/withSwiftEmitModuleInterface",
+      "./plugins/withNotifeeForegroundServiceType",
+      "./plugins/withDisableLint",
+      "expo-localization"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "ef93cfcf-9bc1-4ce9-8b5d-b4bf7e4198d7"
+      }
+    },
+    "owner": "aroooy"
+  }
+}

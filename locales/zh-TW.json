@@ -1,0 +1,6 @@
+{
+  "NSBluetoothAlwaysUsageDescription": "RS-R Remote 使用藍牙來尋找、連接及控制你的 GoPro 相機。",
+  "NSBluetoothPeripheralUsageDescription": "RS-R Remote 使用藍牙與你的 GoPro 相機通訊。",
+  "NSLocationWhenInUseUsageDescription": "RS-R Remote 使用你的位置來尋找附近的 GoPro 相機並連接其 Wi-Fi。",
+  "NSLocalNetworkUsageDescription": "RS-R Remote 連接到你的 GoPro 的 Wi-Fi 網路以串流即時預覽畫面。"
+}

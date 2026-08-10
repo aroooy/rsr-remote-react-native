@@ -1,0 +1,13 @@
+{
+    "terminal.integrated.env.osx": {
+        "ANDROID_HOME": "${env:HOME}/Library/Android/sdk",
+        "PATH": "${env:PATH}:${env:HOME}/Library/Android/sdk/emulator:${env:HOME}/Library/Android/sdk/platform-tools"
+    },
+    "chat.tools.terminal.autoApprove": {
+        "npx tsc": true,
+        "/^sudo ln -sfn /usr/local/opt/openjdk@17/libexec/openjdk\\.jdk /Library/Java/JavaVirtualMachines/openjdk-17\\.jdk$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

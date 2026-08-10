@@ -1,0 +1,75 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# credentials (EAS Local Build 用、プロジェクトルート固定)
+credentials.json
+
+# EAS Build/Submission config (contains submitter-specific secrets)
+eas.json
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
+
+# ProTuneRemote_Latest generated artifacts
+/ProTuneRemote_Latest/**/bin/
+/ProTuneRemote_Latest/**/obj/
+/ProTuneRemote_Latest/**/build/
+
+# EAS local build artifacts
+build-*.aab
+build-*.apk
+
+# iOS archive / ipa output (method B-2)
+/build/
+
+# Attached screenshots
+unnamed.png
+
+# Attached screenshots (additional)
+unnamed*.png
+
+# Android release signing credentials (never commit)
+# Actual file lives in build-config/android/keystore.properties
+# (see build-config/android/README.md for setup)
+build-config/android/keystore.properties
+keystore.properties
+android/keystore.properties
+
+# Google Play Store submission service account key (never commit)
+build-config/android/play-service-account-key.json
