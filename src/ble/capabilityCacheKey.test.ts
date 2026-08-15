@@ -40,7 +40,6 @@ const hwInfo: HardwareInfo = {
 const readyState = (overrides: Partial<CameraSpecificState> = {}): CameraSpecificState => ({
   ...createDefaultCameraState(),
   hardwareInfo: hwInfo,
-  cameraModel: 'hero13',
   isReady: true,
   systemBusy: false,
   settings: { [GoProSettingId.MODE_PRESET]: 0, ...(overrides.settings ?? {}) },

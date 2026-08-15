@@ -28,6 +28,7 @@ import {
   normalizeBaseDisplayPresetId,
   resolveBaseDisplayPresetId,
 } from '../cameraModels/shared/displayPreset';
+import { resolveCameraModelKeyFromModelNo } from '../cameraModels/shared/modelNumber';
 import type { AppLocale } from '../i18n';
 
 /**
@@ -67,7 +68,6 @@ export interface CameraSpecificState {
   settings: { [settingId: number]: number }; // e.g.: { 2: 9, 3: 8 }
   isRefreshingCapabilities: boolean;
   presets: GoProPresetGroupData[];
-  cameraModel: import('../constants/ResolutionAspectMap').CameraModelKey;
   hardwareInfo: HardwareInfo | null;
   apPassword: string | null;
   scheduledTime: { hour: number; minute: number } | null;
@@ -106,7 +106,6 @@ export const createDefaultCameraState = (): CameraSpecificState => ({
   settings: {},
   isRefreshingCapabilities: false,
   presets: [],
-  cameraModel: 'unknown',
   hardwareInfo: null,
   apPassword: null,
   scheduledTime: null,
@@ -200,7 +199,6 @@ export interface GoProState {
   setCapabilityCache: (cache: Record<string, Record<number, number[]>>) => void;
   setIsRefreshingCapabilities: (isRefreshing: boolean) => void;
   setPresets: (groups: GoProPresetGroupData[], deviceId?: string) => void;
-  setCameraModel: (model: import('../constants/ResolutionAspectMap').CameraModelKey) => void;
   setHardwareInfo: (info: HardwareInfo | null) => void;
   setApPassword: (password: string | null) => void;
   setScheduledTime: (time: { hour: number; minute: number } | null) => void;
@@ -482,7 +480,6 @@ export const useGoProStore = create<GoProState>((set) => {
           },
         };
       }),
-    setCameraModel: updateField('cameraModel'),
     setHardwareInfo: updateField('hardwareInfo'),
     setApPassword: updateField('apPassword'),
     setScheduledTime: updateField('scheduledTime'),
@@ -657,3 +654,14 @@ export function useActiveCameraState<T>(selector: (cs: CameraSpecificState) => T
 
 export const useCurrentModelNo = () =>
   useGoProStore((state) => selectActiveCameraState(state).hardwareInfo?.modelNo ?? null);
+
+/**
+ * Derived selector — returns the CameraModelKey derived from hardwareInfo.modelNo.
+ * Replaces the now-removed `cameraModel` field so that modelNo is the single
+ * source of truth and `cameraModel` can never diverge from it.
+ */
+export const useCameraModel = () =>
+  useGoProStore((state) => {
+    const modelNo = selectActiveCameraState(state).hardwareInfo?.modelNo ?? null;
+    return resolveCameraModelKeyFromModelNo(modelNo);
+  });

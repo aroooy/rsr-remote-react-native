@@ -21,22 +21,22 @@
  */
 
 /**
- * GoPro modelNo definitions managed by the app.
+ * GoPro modelNo definitions — single source of truth is `modelManifest.ts`.
+ * This file re-exports for backward compatibility.
+ *
  * Reference:
  * - ProTuneRemote_Latest/ProTuneRemote/Constans/GoProModelNo.cs
  * - Open GoPro API `CameraInfo.model_number`
  */
-export const GOPRO_MODEL_NUMBERS = {
-  MAX: 51,
-  HERO09_BLACK: 55,
-  HERO10_BLACK: 57,
-  HERO11_BLACK: 58,
-  HERO11_BLACK_MINI: 60,
-  HERO12_BLACK: 62,
-  HERO13_BLACK: 65,
-} as const;
 
-export type GoProModelNumber = (typeof GOPRO_MODEL_NUMBERS)[keyof typeof GOPRO_MODEL_NUMBERS];
+export {
+  GOPRO_MODEL_NUMBERS,
+} from '../cameraModels/shared/modelManifest';
+
+export type { GoProModelNumberLegacy as GoProModelNumber } from '../cameraModels/shared/modelManifest';
+
+// Keep the label map here (model-specific display names, not derivable from manifest)
+import { GOPRO_MODEL_NUMBERS } from '../cameraModels/shared/modelManifest';
 
 export const GOPRO_MODEL_NUMBER_LABELS = {
   [GOPRO_MODEL_NUMBERS.MAX]: 'GoPro Max',
@@ -46,9 +46,9 @@ export const GOPRO_MODEL_NUMBER_LABELS = {
   [GOPRO_MODEL_NUMBERS.HERO11_BLACK_MINI]: 'HERO11 Black Mini',
   [GOPRO_MODEL_NUMBERS.HERO12_BLACK]: 'HERO12 Black',
   [GOPRO_MODEL_NUMBERS.HERO13_BLACK]: 'HERO13 Black',
-} as const satisfies Readonly<Record<GoProModelNumber, string>>;
+} as const satisfies Readonly<Record<number, string>>;
 
 export const getGoProModelNumberLabel = (modelNo: number | null | undefined): string | null => {
   if (modelNo === null || modelNo === undefined) return null;
-  return GOPRO_MODEL_NUMBER_LABELS[modelNo as GoProModelNumber] ?? null;
+  return GOPRO_MODEL_NUMBER_LABELS[modelNo as number] ?? null;
 };

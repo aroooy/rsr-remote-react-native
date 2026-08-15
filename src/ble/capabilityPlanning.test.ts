@@ -27,7 +27,15 @@ import { GoProSettingId, GoProPresetGroup } from '../constants/GoProSettingIds';
 
 const stateWith = (overrides: Partial<CameraSpecificState>): CameraSpecificState => ({
   ...createDefaultCameraState(),
-  cameraModel: 'hero13',
+  hardwareInfo: {
+    modelNo: 65,
+    modelName: 'HERO13 Black',
+    boardType: 4,
+    firmwareVersion: 'H24.01',
+    serialNumber: 'C123',
+    ssid: 'GP123',
+    macAddress: 'AA:BB',
+  },
   ...overrides,
 });
 

@@ -92,8 +92,8 @@ import {
 } from '../device/CapabilityCacheRepository';
 import { debugDebug, debugLog, debugWarn } from '../utils/debugLogging';
 import { isSettingModelSupported } from '../constants/settingConstraints';
-import { resolveCameraModelKeyFromModelNo } from '../cameraModels/shared/modelNumber';
 import { isHero11OrNewerModel, isHero12Or13Model } from '../cameraModels/shared/modelNoHelpers';
+import { resolveCameraModelFromHardwareInfo } from '../cameraModels/shared/modelNumber';
 import {
   resolveOutgoingBleSettingId,
   INCOMING_SETTING_SYNC_RULES,
@@ -602,10 +602,7 @@ class GoProBLEManager {
 
     const persistedHwInfo = await this.loadPersistedHardwareInfo(discover.id);
     if (persistedHwInfo) {
-      store.updateDeviceState(discover.id, {
-        hardwareInfo: persistedHwInfo,
-        cameraModel: resolveCameraModelKeyFromModelNo(persistedHwInfo.modelNo),
-      });
+      store.updateDeviceState(discover.id, { hardwareInfo: persistedHwInfo });
       debugLog(
         'ble',
         '[BLE] HardwareInfo hydrated from DB modelName:',
@@ -633,9 +630,7 @@ class GoProBLEManager {
       '/ modelNo:',
       effectiveHwInfo.modelNo,
     );
-    const confirmedModel = resolveCameraModelKeyFromModelNo(effectiveHwInfo.modelNo);
-    store.updateDeviceState(discover.id, { cameraModel: confirmedModel });
-    debugLog('ble', '[BLE] cameraModel confirmed:', confirmedModel);
+    debugLog('ble', '[BLE] hardwareInfo confirmed — modelNo:', effectiveHwInfo.modelNo);
     if (store.autoNavigateToControl) {
       store.setActiveScreen('control');
     }
@@ -1307,7 +1302,7 @@ class GoProBLEManager {
                 getCapabilityDependencyRefreshIds(
                   changedIds,
                   cameraState.settings,
-                  cameraState.cameraModel,
+                  resolveCameraModelFromHardwareInfo(cameraState.hardwareInfo),
                   cameraState.presets,
                 ).forEach((depId) => conn.pendingDebouncedCapabilityIds.add(depId));
                 if (conn.pendingDebouncedCapabilityIds.size > 0) {
@@ -2056,7 +2051,7 @@ class GoProBLEManager {
       const matched =
         actualValue !== undefined &&
         areSettingValuesEquivalent(settingId, actualValue, targetValue, {
-          modelKey: cs.cameraModel,
+          modelKey: resolveCameraModelFromHardwareInfo(cs.hardwareInfo),
           modelNo: cs.hardwareInfo?.modelNo,
         });
 

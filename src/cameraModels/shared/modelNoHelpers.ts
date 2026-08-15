@@ -20,52 +20,90 @@
  * SOFTWARE.
  */
 
-import { GOPRO_MODEL_NUMBERS, GoProModelNumber } from '../../constants/GoProModelNumbers';
+/**
+ * Model helper predicates — driven by MODEL_MANIFEST so that adding a new
+ * model only requires updating the manifest, not every helper function.
+ *
+ * Backward-compat: all previously-exported function names are preserved with
+ * identical signatures so callers do not need to change.
+ */
+
+import {
+  getModelManifestByModelNo,
+  isGenerationRange,
+  isMaxModel,
+  isModelFamily,
+  isSameOrNewerGeneration,
+  type CameraModelKey,
+} from './modelManifest';
+
+// ---------------------------------------------------------------------------
+// Exact-match helpers
+// ---------------------------------------------------------------------------
 
 export const isGoProModelNumber = (
   modelNo: number | null | undefined,
-  expected: GoProModelNumber,
+  expected: number,
 ): boolean => {
   return modelNo === expected;
 };
 
 export const isHero13Model = (modelNo: number | null | undefined): boolean => {
-  return modelNo === GOPRO_MODEL_NUMBERS.HERO13_BLACK;
+  return isSameModelNo(modelNo, 'hero13');
 };
 
 export const isHero12Model = (modelNo: number | null | undefined): boolean => {
-  return modelNo === GOPRO_MODEL_NUMBERS.HERO12_BLACK;
-};
-
-export const isHero12Or13Model = (modelNo: number | null | undefined): boolean => {
-  return (
-    modelNo === GOPRO_MODEL_NUMBERS.HERO12_BLACK || modelNo === GOPRO_MODEL_NUMBERS.HERO13_BLACK
-  );
+  return isSameModelNo(modelNo, 'hero12');
 };
 
 export const isHero11Model = (modelNo: number | null | undefined): boolean => {
-  return modelNo === GOPRO_MODEL_NUMBERS.HERO11_BLACK;
+  return isSameModelNo(modelNo, 'hero11');
 };
 
 export const isHero11MiniModel = (modelNo: number | null | undefined): boolean => {
-  return modelNo === GOPRO_MODEL_NUMBERS.HERO11_BLACK_MINI;
+  return isSameModelNo(modelNo, 'heromi11');
 };
 
+export const isHero10Model = (modelNo: number | null | undefined): boolean => {
+  return isSameModelNo(modelNo, 'hero10');
+};
+
+export const isHero09Model = (modelNo: number | null | undefined): boolean => {
+  return isSameModelNo(modelNo, 'hero09');
+};
+
+export const isMaxModelHelper = (modelNo: number | null | undefined): boolean => {
+  return isMaxModel(modelNo);
+};
+
+function isSameModelNo(modelNo: number | null | undefined, key: CameraModelKey): boolean {
+  const m = getModelManifestByModelNo(modelNo);
+  return m?.key === key;
+}
+
+// ---------------------------------------------------------------------------
+// Range / family helpers — driven by MODEL_MANIFEST generations
+// ---------------------------------------------------------------------------
+
+/** HERO12 or HERO13 (generation 4–5). Automatically picks up new models in this range. */
+export const isHero12Or13Model = (modelNo: number | null | undefined): boolean => {
+  return isGenerationRange(modelNo, 'hero12', 'hero13');
+};
+
+/** HERO11 family: HERO11 + HERO11 Mini. */
 export const isHero11FamilyModel = (modelNo: number | null | undefined): boolean => {
-  return (
-    modelNo === GOPRO_MODEL_NUMBERS.HERO11_BLACK ||
-    modelNo === GOPRO_MODEL_NUMBERS.HERO11_BLACK_MINI
-  );
+  return isModelFamily(modelNo, 'hero', 'hero-mini') && isGenerationRange(modelNo, 'hero11', 'heromi11');
 };
 
+/** HERO11 family + MAX. */
 export const isHero11FamilyOrMaxModel = (modelNo: number | null | undefined): boolean => {
-  return isHero11FamilyModel(modelNo) || modelNo === GOPRO_MODEL_NUMBERS.MAX;
+  return isHero11FamilyModel(modelNo) || isMaxModel(modelNo);
 };
 
+/** HERO11 or newer (generation >= 3, excludes MAX which is generation 0). */
 export const isHero11OrNewerModel = (modelNo: number | null | undefined): boolean => {
-  return isHero11FamilyModel(modelNo) || isHero12Or13Model(modelNo);
+  return isSameOrNewerGeneration(modelNo, 'hero11');
 };
 
-export const isMaxModel = (modelNo: number | null | undefined): boolean => {
-  return modelNo === GOPRO_MODEL_NUMBERS.MAX;
-};
+/** MAX model check (alias for isMaxModel from modelManifest). */
+export { isMaxModel } from './modelManifest';

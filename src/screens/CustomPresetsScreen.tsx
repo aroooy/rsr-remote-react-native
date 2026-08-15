@@ -35,7 +35,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { useGoProStore, useActiveCameraState } from '../store/GoProStore';
+import { useGoProStore, useActiveCameraState, useCameraModel } from '../store/GoProStore';
 import {
   CustomPreset,
   saveCustomPreset,
@@ -67,7 +67,7 @@ export const CustomPresetsScreen = () => {
   const settings = useActiveCameraState((cs) => cs.settings);
   const connectedDeviceId = useGoProStore((state) => state.connectedDeviceId);
   const hardwareInfo = useActiveCameraState((cs) => cs.hardwareInfo);
-  const cameraModel = useActiveCameraState((cs) => cs.cameraModel);
+  const cameraModel = useCameraModel();
   const cameraPresets = useActiveCameraState((cs) => cs.presets);
   const purchasedProducts = useGoProStore((state) => state.purchasedProducts);
   const theme = useGoProStore((state) => state.theme);

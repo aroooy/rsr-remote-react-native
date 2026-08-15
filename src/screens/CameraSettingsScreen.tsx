@@ -33,7 +33,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { useCurrentModelNo, useGoProStore, useActiveCameraState } from '../store/GoProStore';
+import { useCurrentModelNo, useGoProStore, useActiveCameraState, useCameraModel } from '../store/GoProStore';
 import { isMaxModel } from '../cameraModels/shared/modelNoHelpers';
 import { useShallow } from 'zustand/react/shallow';
 import { goProBle } from '../ble/GoProBLEManager';
@@ -158,7 +158,7 @@ const CAMERA_SETTINGS_GROUPS: { titleKey: string; ids: readonly number[] }[] = [
 export const CameraSettingsScreen = () => {
   const { t } = useTranslation();
   const theme = useGoProStore((state) => state.theme);
-  const cameraModel = useActiveCameraState((cs) => cs.cameraModel);
+  const cameraModel = useCameraModel();
   const currentModelNo = useCurrentModelNo();
   const hardwareInfo = useActiveCameraState((cs) => cs.hardwareInfo);
   const isEncoding = useActiveCameraState((cs) => cs.isEncoding);

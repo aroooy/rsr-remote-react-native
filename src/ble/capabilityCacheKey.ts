@@ -35,6 +35,7 @@
 import type { CameraSpecificState } from '../store/GoProStore';
 import { GoProSettingId, getDisplaySettingPlan } from '../constants/GoProSettingIds';
 import { selectIsShortTermBusy } from '../store/GoProSelectors';
+import { resolveCameraModelFromHardwareInfo } from '../cameraModels/shared/modelNumber';
 
 /**
  * Build the capability-cache key for a camera state, or null when the state is
@@ -62,7 +63,7 @@ export function buildCapabilityCacheKey(
 
   const plan = getDisplaySettingPlan(
     cameraState.settings,
-    cameraState.cameraModel,
+    resolveCameraModelFromHardwareInfo(cameraState.hardwareInfo),
     cameraState.presets,
   );
   const { cacheKeyProjection, specialRowsProjection } = plan;

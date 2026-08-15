@@ -21,25 +21,17 @@
  */
 
 /**
- * @deprecated Import `resolveCameraModelKeyFromModelNo` / `resolveModelNoFromCameraModelKey`
- * from `./modelManifest` directly. This file re-exports them for backward compatibility.
+ * Capability dependency graph and refresh triggers.
+ *
+ * Defines which Setting IDs need their capabilities re-fetched when another
+ * Setting ID changes, and the priority order for bulk preset restoration.
  */
 
 export {
-  resolveCameraModelKeyFromModelNo,
-  resolveModelNoFromCameraModelKey,
-  CameraModelKey,
-  GOPRO_MODEL_NUMBERS,
-} from './modelManifest';
-import { resolveCameraModelKeyFromModelNo } from './modelManifest';
-
-/**
- * Derive CameraModelKey from a hardwareInfo object (or null/undefined).
- * Used to replace the now-removed `cameraModel` field so that modelNo is
- * the single source of truth.
- */
-export function resolveCameraModelFromHardwareInfo(
-  hardwareInfo: { modelNo: number | null } | null | undefined,
-): import('./modelManifest').CameraModelKey {
-  return resolveCameraModelKeyFromModelNo(hardwareInfo?.modelNo ?? null);
-}
+  CAPABILITY_REFRESH_DEPENDENCIES,
+  CAPABILITY_REFRESH_TRIGGER_IDS,
+  RESTORE_PRIORITY_ORDER,
+  PRESET_REFRESH_TRIGGER_IDS,
+  DASHBOARD_SUB_SETTING_IDS,
+  PRESET_RESTORE_SYSTEM_SETTING_IDS,
+} from './refreshTriggers';

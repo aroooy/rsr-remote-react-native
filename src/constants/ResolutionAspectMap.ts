@@ -179,18 +179,32 @@ const MAX_RESOLUTION_MAP: Record<number, ResolutionEntry> = {
   9: { label: '1080', aspect: '16:9', family: '1080' },
 };
 
-export type CameraModelKey =
-  'hero13' | 'hero12' | 'hero11' | 'heromi11' | 'hero10' | 'hero09' | 'max' | 'unknown';
+import type { CameraModelKey as CameraModelKeyFromManifest } from '../cameraModels/shared/modelManifest';
+
+/**
+ * CameraModelKey — re-exported from modelManifest for backward compatibility.
+ * Callers that currently import this type from ResolutionAspectMap should
+ * continue to work.
+ */
+export type CameraModelKey = CameraModelKeyFromManifest;
+
+/**
+ * Resolution map registry — keyed by CameraModelKey so adding a new model
+ * only requires appending an entry, not editing a switch-statement.
+ */
+const RESOLUTION_MAP_REGISTRY: Record<string, Record<number, ResolutionEntry>> = {
+  hero13: HERO13_RESOLUTION_MAP,
+  hero12: HERO12_RESOLUTION_MAP,
+  hero11: HERO11_RESOLUTION_MAP,
+  heromi11: HERO11_RESOLUTION_MAP, // HERO11 Mini has the same resolution set as HERO11
+  hero10: HERO10_RESOLUTION_MAP,
+  hero09: HERO09_RESOLUTION_MAP,
+  max: MAX_RESOLUTION_MAP,
+  unknown: {},
+};
 
 export const getResolutionMap = (model: CameraModelKey): Record<number, ResolutionEntry> => {
-  if (model === 'hero13') return HERO13_RESOLUTION_MAP;
-  if (model === 'hero12') return HERO12_RESOLUTION_MAP;
-  if (model === 'hero11') return HERO11_RESOLUTION_MAP;
-  if (model === 'heromi11') return HERO11_RESOLUTION_MAP; // HERO11 Mini has the same resolution set as HERO11
-  if (model === 'hero10') return HERO10_RESOLUTION_MAP;
-  if (model === 'hero09') return HERO09_RESOLUTION_MAP;
-  if (model === 'max') return MAX_RESOLUTION_MAP;
-  return {};
+  return RESOLUTION_MAP_REGISTRY[model] ?? {};
 };
 
 /** Model-specific RESOLUTION label (independent of existing metadata) */

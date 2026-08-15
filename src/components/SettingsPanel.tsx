@@ -39,7 +39,7 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useGoProStore, useCurrentModelNo, useActiveCameraState } from '../store/GoProStore';
+import { useGoProStore, useCurrentModelNo, useActiveCameraState, useCameraModel } from '../store/GoProStore';
 import { useShallow } from 'zustand/react/shallow';
 import {
   getHardwareFeatures,
@@ -147,7 +147,7 @@ export const SettingsPanel = () => {
   const shootingLocked = useActiveCameraState(selectIsShootingLocked);
   const hindsightActive = useActiveCameraState(selectHindsightActive);
   const presets = useActiveCameraState((cs) => cs.presets);
-  const cameraModel = useActiveCameraState((cs) => cs.cameraModel);
+  const cameraModel = useCameraModel();
   const currentModelNo = useCurrentModelNo();
   const connectedDeviceId = useGoProStore((state) => state.connectedDeviceId);
   const scheduledTime = useActiveCameraState((cs) => cs.scheduledTime);

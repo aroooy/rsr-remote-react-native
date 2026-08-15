@@ -29,6 +29,7 @@ import {
   isHero11Model,
   isMaxModel,
 } from '../cameraModels/shared/modelNoHelpers';
+import { resolveCameraModelFromHardwareInfo } from '../cameraModels/shared/modelNumber';
 
 export type QueryResponseResult = {
   changedSettingIds?: number[];
@@ -131,7 +132,7 @@ export const processQueryResponse = (
           if (
             expectedValue !== undefined &&
             areSettingValuesEquivalent(id, actualValue, expectedValue, {
-              modelKey: cameraState.cameraModel,
+              modelKey: resolveCameraModelFromHardwareInfo(cameraState.hardwareInfo),
               modelNo: cameraState.hardwareInfo?.modelNo,
             })
           ) {

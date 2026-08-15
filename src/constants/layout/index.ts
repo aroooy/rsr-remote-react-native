@@ -20,60 +20,7 @@
  * SOFTWARE.
  */
 
-import { GoProPresetGroup, GoProPresetGroupSelectId } from './GoProPresetGroup';
-
-// GoProSettingId is defined in GoProSettingId.ts to avoid circular dependencies
-import { GoProSettingId } from './GoProSettingId';
-export { GoProSettingId };
-
-// Imported from capabilityDependencies for local use and re-exported (see capabilityDependencies/refreshTriggers.ts)
-import {
-  CAPABILITY_REFRESH_DEPENDENCIES,
-  CAPABILITY_REFRESH_TRIGGER_IDS,
-  RESTORE_PRIORITY_ORDER,
-  PRESET_REFRESH_TRIGGER_IDS,
-  CAMERA_ADVANCED_SETTING_IDS,
-  PRESET_RESTORE_SYSTEM_SETTING_IDS,
-  DASHBOARD_SUB_SETTING_IDS,
-} from './capabilityDependencies/refreshTriggers';
-export {
-  CAPABILITY_REFRESH_DEPENDENCIES,
-  CAPABILITY_REFRESH_TRIGGER_IDS,
-  RESTORE_PRIORITY_ORDER,
-  PRESET_REFRESH_TRIGGER_IDS,
-  CAMERA_ADVANCED_SETTING_IDS,
-  PRESET_RESTORE_SYSTEM_SETTING_IDS,
-  DASHBOARD_SUB_SETTING_IDS,
-};
-
-// Re-export GoProPresetGroup symbols for backward compatibility
-export { GoProPresetGroup, GoProPresetGroupSelectId };
-
-// ── Derived ID arrays ────────────────────────────────────────────────────────────
-
-export const MODE_AND_PROFILE_SETTING_IDS: readonly number[] = [
-  GoProSettingId.MODE_PRESET_GROUP,
-  GoProSettingId.MODE_PRESET,
-] as const;
-
-export const PRIMARY_SETTING_IDS: readonly number[] = [
-  GoProSettingId.VIDEO_PROFILE,
-  GoProSettingId.RESOLUTION,
-  GoProSettingId.FPS,
-  GoProSettingId.VIDEO_LENS,
-  GoProSettingId.PHOTO_LENS,
-] as const;
-
-export const PRIMARY_SETTING_DISPLAY_ORDER: readonly number[] = [
-  GoProSettingId.VIDEO_PROFILE,
-  GoProSettingId.RESOLUTION,
-  GoProSettingId.FPS,
-  GoProSettingId.VIDEO_LENS,
-  GoProSettingId.PHOTO_LENS,
-] as const;
-
-// ── Re-exports from layout/ (split for modularity) ──────────────────────────────
-
+// Types
 export type {
   SettingsMap,
   GoProDisplayLayout,
@@ -81,13 +28,12 @@ export type {
   GoProSpecialRowsProjection,
   GoProCapabilityCacheKeyProjection,
   GoProDisplaySettingPlan,
-  TimelapseCategory,
-} from './layout';
+} from './types';
+export { findActivePreset, LayoutBuilder, composeDisplayLayout } from './types';
 
+// Constants
+export type { TimelapseCategory } from './constants';
 export {
-  findActivePreset,
-  LayoutBuilder,
-  composeDisplayLayout,
   GoProVideoPreset,
   fallbackPresetsByModel,
   EASY_VIDEO_PRESETS,
@@ -119,8 +65,12 @@ export {
   LAPSE_WITH_PHOTO_PRESETS,
   classifyTimelapsePreset,
   isTimelapseLikePreset,
+} from './constants';
+
+// Functions
+export {
   getDisplayLayout,
   isDefaultVisibleAdvancedSetting,
   getDisplaySettingPlan,
   getCapabilityDependencyRefreshIds,
-} from './layout';
+} from './functions';

@@ -35,12 +35,13 @@ import {
   getDisplaySettingPlan,
 } from '../constants/GoProSettingIds';
 import { isSettingModelSupported } from '../constants/settingConstraints';
+import { resolveCameraModelFromHardwareInfo } from '../cameraModels/shared/modelNumber';
 
 /** IDs to prefetch for the current quick-settings view of this camera state. */
 export const getDefaultCapabilityPrefetchIds = (cameraState: CameraSpecificState): number[] => {
   const plan = getDisplaySettingPlan(
     cameraState.settings,
-    cameraState.cameraModel,
+    resolveCameraModelFromHardwareInfo(cameraState.hardwareInfo),
     cameraState.presets,
   );
   return [...plan.defaultCapabilityPrefetchIds];
@@ -50,7 +51,7 @@ export const getDefaultCapabilityPrefetchIds = (cameraState: CameraSpecificState
 export const getPlannedFullCapabilityRefreshIds = (cameraState: CameraSpecificState): number[] => {
   const plan = getDisplaySettingPlan(
     cameraState.settings,
-    cameraState.cameraModel,
+    resolveCameraModelFromHardwareInfo(cameraState.hardwareInfo),
     cameraState.presets,
   );
   return [...plan.fullRefreshBaseIds];
@@ -65,7 +66,7 @@ export const filterCapabilityIdsForCurrentContext = (
   settingIds: number[],
   cameraState: CameraSpecificState,
 ): number[] => {
-  const cameraModel = cameraState.cameraModel;
+  const cameraModel = resolveCameraModelFromHardwareInfo(cameraState.hardwareInfo);
   const settings = cameraState.settings;
 
   const currentGroupId =
