@@ -21,6 +21,7 @@
  */
 
 import * as SQLite from 'expo-sqlite';
+import { CAPABILITY_CACHE_SAVE_DEBOUNCE_MS } from '../constants/Timeouts';
 
 const DB_NAME = 'gopro_devices.db';
 const TABLE_NAME = 'capability_cache_v1';
@@ -129,7 +130,7 @@ export const saveCapabilityCache = (
       );
     };
     saveQueue = saveQueue.then(run, run);
-  }, 2000);
+  }, CAPABILITY_CACHE_SAVE_DEBOUNCE_MS);
 };
 
 export const clearCapabilityCache = async (cameraId: string): Promise<void> => {

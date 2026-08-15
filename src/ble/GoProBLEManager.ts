@@ -56,6 +56,22 @@ import {
 import { GoProSettingId } from '../constants/GoProSettingId';
 import { GoProPresetGroup, GoProPresetGroupSelectId } from '../constants/GoProPresetGroup';
 import { getCapabilityDependencyRefreshIds, getDisplaySettingPlan, FOUR_BYTE_SETTING_IDS } from '../constants/layout';
+import {
+  BLE_SCAN_TIMEOUT_MS,
+  BLE_BOOTING_TIMEOUT_MS,
+  BLE_KEEPALIVE_INTERVAL_MS,
+  BLE_INTENTIONAL_DISCONNECT_RETENTION_MS,
+  BLE_CHUNK_SEND_DELAY_MS,
+  BLE_BOOTSTRAP_QUERY_DELAY_MS,
+  BLE_BOOTSTRAP_PRESET_DELAY_MS,
+  BLE_CAPABILITY_QUERY_INTERVAL_MS,
+  BLE_HARDWARE_INFO_RETRY_DELAY_MS,
+  BLE_EXTENDED_NOTIFICATION_TIMEOUT_MS,
+  BLE_PRESET_UPDATE_TIMEOUT_MS,
+  CAPABILITY_REFRESH_DEBOUNCE_MS,
+  PRESET_REFRESH_DEBOUNCE_MS,
+  PRESET_STATE_QUERY_DEBOUNCE_MS,
+} from '../constants/Timeouts';
 import { isSystemSetting } from '../constants/SystemSettings';
 import { CommandQueue, BusyRejectedError } from './CommandQueue';
 import { selectIsShortTermBusy, CommandCategory } from '../store/GoProSelectors';
@@ -314,7 +330,7 @@ class GoProBLEManager {
       if (this.currentScan?.sessionId === sessionId) {
         this.finishScanSession('timeout');
       }
-    }, options.timeoutMs ?? 10000);
+    }, options.timeoutMs ?? BLE_SCAN_TIMEOUT_MS);
 
     return true;
   }
@@ -464,7 +480,7 @@ class GoProBLEManager {
     this.intentionalDisconnectIds.add(deviceId);
     // Self-clear if no disconnect actually follows, so a later genuine drop is
     // still reported.
-    setTimeout(() => this.intentionalDisconnectIds.delete(deviceId), 15000);
+    setTimeout(() => this.intentionalDisconnectIds.delete(deviceId), BLE_INTENTIONAL_DISCONNECT_RETENTION_MS);
   }
 
   private resolveDeviceName(deviceId: string): string {
@@ -656,7 +672,7 @@ class GoProBLEManager {
         if (idsToFetch.length > 0)
           void this.fetchCapabilitiesByIds(idsToFetch, true, conn.deviceId);
       }
-    }, 3000);
+    }, BLE_BOOTING_TIMEOUT_MS);
 
     void this.bootstrapConnectedDevice(discover.id);
     return discover;
@@ -684,15 +700,15 @@ class GoProBLEManager {
       }
 
       await this.sendQuery([0x01, 0x12], deviceId);
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, BLE_BOOTSTRAP_QUERY_DELAY_MS));
       await this.sendQuery([0x01, 0x52], deviceId);
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, BLE_BOOTSTRAP_QUERY_DELAY_MS));
       await this.sendQuery([0x01, 0x53], deviceId);
       // To mimic the legacy app, automatic capability fetching is not performed.
       // Capabilities are only fetched for items needed during UI interaction.
       // (The cache load process that was here has been moved up)
       // Get the preset list via Protobuf (including custom presets).
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, BLE_BOOTSTRAP_PRESET_DELAY_MS));
       await this.fetchPresetStatus(deviceId);
     } catch (e) {
       debugWarn('ble', 'bootstrapConnectedDevice failed', e);
@@ -852,7 +868,7 @@ class GoProBLEManager {
           if (!store.bypassCapabilityCache) {
             this.enqueuePendingCapabilityCacheKey(id, cacheKey, targetId);
           }
-          await new Promise((resolve) => setTimeout(resolve, 60));
+          await new Promise((resolve) => setTimeout(resolve, BLE_CAPABILITY_QUERY_INTERVAL_MS));
           const ok = await this.sendQuery([0x02, 0x32, id], targetId);
           if (!ok && !store.bypassCapabilityCache) {
             this.consumePendingCapabilityCacheKey(id, targetId);
@@ -1311,7 +1327,7 @@ class GoProBLEManager {
                     const idsToRefresh = Array.from(conn.pendingDebouncedCapabilityIds);
                     conn.pendingDebouncedCapabilityIds.clear();
                     void this.fetchCapabilitiesByIds(idsToRefresh, true, deviceId);
-                  }, 300);
+                  }, CAPABILITY_REFRESH_DEBOUNCE_MS);
                 }
               }
             }
@@ -1384,7 +1400,7 @@ class GoProBLEManager {
               conn.presetRefreshTimer = setTimeout(() => {
                 conn.presetRefreshTimer = null;
                 void this.fetchPresetStatus(deviceId).catch(() => {});
-              }, 500);
+              }, PRESET_REFRESH_DEBOUNCE_MS);
             }
           }
         }
@@ -1464,7 +1480,7 @@ class GoProBLEManager {
           conn.pendingHardwareInfoResolver = null;
           debugWarn('ble', 'fetchHardwareInfo timeout');
           resolve(null);
-        }, 5000);
+        }, BLE_EXTENDED_NOTIFICATION_TIMEOUT_MS);
 
         conn.pendingHardwareInfoResolver = (info) => {
           clearTimeout(timer);
@@ -1501,7 +1517,7 @@ class GoProBLEManager {
 
       if (attempt < maxAttempts) {
         debugWarn('ble', `[BLE] fetchHardwareInfo attempt ${attempt} failed; retrying...`);
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, BLE_HARDWARE_INFO_RETRY_DELAY_MS));
       }
     }
 
@@ -1569,7 +1585,7 @@ class GoProBLEManager {
     const nextWrite = conn.queryWriteTail.then(runQueryWrite, runQueryWrite);
     conn.queryWriteTail = nextWrite
       .then(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 25));
+        await new Promise((resolve) => setTimeout(resolve, BLE_CHUNK_SEND_DELAY_MS));
       })
       .catch(() => undefined);
 
@@ -1604,7 +1620,7 @@ class GoProBLEManager {
           () => {},
         );
       })();
-    }, 200);
+    }, PRESET_STATE_QUERY_DEBOUNCE_MS);
   }
 
   public async setSetting(settingId: number, value: number, deviceId?: string) {
@@ -1683,7 +1699,7 @@ class GoProBLEManager {
               }
               freshStore.updateDeviceState(targetId, { toastMessage: t('ble.settingUnchanged') });
             }
-          }, 5000);
+          }, BLE_EXTENDED_NOTIFICATION_TIMEOUT_MS);
           conn.pendingTimeouts.set(settingId, timeoutId);
         },
         { category, settingId, label: `setSetting(${settingId}=${value})` },
@@ -2095,7 +2111,7 @@ class GoProBLEManager {
     const cmd = [0xf5, 0x72, ...protobufPayload];
 
     return new Promise<GoProPresetGroupData[]>((resolve, reject) => {
-      const TIMEOUT_MS = 5000;
+      const TIMEOUT_MS = BLE_EXTENDED_NOTIFICATION_TIMEOUT_MS;
       const timer = setTimeout(() => {
         conn.pendingPresetResolver = null;
         reject(new Error('fetchPresetStatus timeout'));
@@ -2151,7 +2167,7 @@ class GoProBLEManager {
     const cmd = [0xf1, 0x64, ...protobufPayload];
 
     return new Promise<boolean>((resolve) => {
-      const TIMEOUT_MS = 4000;
+      const TIMEOUT_MS = BLE_PRESET_UPDATE_TIMEOUT_MS;
       const timer = setTimeout(() => {
         conn.pendingPresetUpdateResolver = null;
         debugWarn('blePreset', '[BLE] renameActivePreset timeout');
@@ -2271,7 +2287,7 @@ class GoProBLEManager {
             useGoProStore
               .getState()
               .clearPendingSettingForDevice(targetId, GoProSettingId.MODE_PRESET);
-          }, 5000);
+          }, BLE_EXTENDED_NOTIFICATION_TIMEOUT_MS);
           conn.pendingTimeouts.set(GoProSettingId.MODE_PRESET, timeoutId);
         },
         {
@@ -2332,7 +2348,7 @@ class GoProBLEManager {
               useGoProStore
                 .getState()
                 .clearPendingSettingForDevice(targetId, GoProSettingId.MODE_PRESET_GROUP);
-            }, 5000);
+            }, BLE_EXTENDED_NOTIFICATION_TIMEOUT_MS);
             conn.pendingTimeouts.set(GoProSettingId.MODE_PRESET_GROUP, timeoutId);
           }
         },
@@ -2457,7 +2473,7 @@ class GoProBLEManager {
           this.handleDisconnectedToTop(conn.deviceId);
         }
       }
-    }, 15000);
+    }, BLE_KEEPALIVE_INTERVAL_MS);
   }
 
   /**

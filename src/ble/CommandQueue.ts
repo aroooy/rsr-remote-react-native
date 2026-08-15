@@ -28,6 +28,11 @@
  * Model differences consideration: docs/technical/09_camera-state-control.md §4
  */
 
+import {
+  COMMAND_QUEUE_LANE_A_WAIT_TIMEOUT_MS,
+  COMMAND_QUEUE_STALL_CHECK_TIMEOUT_MS,
+  COMMAND_QUEUE_SKIP_CHECK_INTERVAL_MS,
+} from '../constants/Timeouts';
 import { useGoProStore, selectActiveCameraState } from '../store/GoProStore';
 import { debugDebug, debugWarn } from '../utils/debugLogging';
 import {
@@ -78,7 +83,7 @@ export class CommandQueue {
 
   enqueue<T>(fn: () => Promise<T>, opts: EnqueueOptions): Promise<T | undefined> {
     const waitPolicy = opts.waitPolicy ?? 'waitForReady';
-    const timeoutMs = opts.timeoutMs ?? 3000;
+    const timeoutMs = opts.timeoutMs ?? COMMAND_QUEUE_LANE_A_WAIT_TIMEOUT_MS;
     this.pendingCount += 1;
     const queuedCount = this.pendingCount;
     const commandName = opts.label ?? opts.category;
@@ -94,7 +99,7 @@ export class CommandQueue {
         'bleQueue',
         `[BLE Diagnostics] QUEUE STALL: Command '${commandName}' has been waiting in queue for >5s! Pending count: ${this.pendingCount}`,
       );
-    }, 5000);
+    }, COMMAND_QUEUE_STALL_CHECK_TIMEOUT_MS);
     const run = async (): Promise<T | undefined> => {
       clearTimeout(queueStallTimer);
 
@@ -222,7 +227,7 @@ function waitForReady(
         cleanup();
         resolve('skipped');
       }
-    }, 50);
+    }, COMMAND_QUEUE_SKIP_CHECK_INTERVAL_MS);
     const cleanup = () => {
       clearTimeout(timer);
       clearInterval(skipTimer);

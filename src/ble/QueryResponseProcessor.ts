@@ -24,6 +24,7 @@ import { useGoProStore, createDefaultCameraState, CameraSpecificState } from '..
 import { areSettingValuesEquivalent } from '../constants/GoProMetadata';
 import { GoProSettingId } from '../constants/GoProSettingId';
 import { FOUR_BYTE_SETTING_IDS } from '../constants/layout';
+import { SYSTEM_BUSY_DEBOUNCE_MS } from '../constants/Timeouts';
 import { debugLog, debugWarn } from '../utils/debugLogging';
 import {
   isHero11FamilyOrMaxModel,
@@ -57,7 +58,7 @@ const handleSystemBusyStatus = (value: boolean, deviceId: string) => {
       useGoProStore.getState().updateDeviceState(deviceId, { systemBusy: value });
     }
     systemBusyDebounceTimers.delete(deviceId);
-  }, 150);
+  }, SYSTEM_BUSY_DEBOUNCE_MS);
   systemBusyDebounceTimers.set(deviceId, newTimer);
 };
 

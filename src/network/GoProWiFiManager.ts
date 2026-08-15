@@ -25,6 +25,7 @@ import WifiManager from 'react-native-wifi-reborn';
 import { useGoProStore, selectActiveCameraState } from '../store/GoProStore';
 import { goProBle } from '../ble/GoProBLEManager';
 import { debugLog } from '../utils/debugLogging';
+import { WIFI_HTTP_REQUEST_TIMEOUT_MS } from '../constants/Timeouts';
 import { t } from '../i18n';
 
 const GOPRO_BASE_URL = 'http://10.5.5.9:8080';
@@ -213,7 +214,7 @@ class GoProWiFiManager {
   public async stopPreviewStream(): Promise<boolean> {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000); // Timeout after 2 seconds
+      const timeoutId = setTimeout(() => controller.abort(), WIFI_HTTP_REQUEST_TIMEOUT_MS);
 
       const response = await fetch(`${GOPRO_BASE_URL}/gopro/camera/stream/stop`, {
         signal: controller.signal,
