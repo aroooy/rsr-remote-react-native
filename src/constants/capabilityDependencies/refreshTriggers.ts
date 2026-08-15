@@ -335,10 +335,10 @@ function createLazyRecord<T extends Record<string, any>>(getter: () => T): T {
   });
 }
 
-export const CAPABILITY_REFRESH_TRIGGER_IDS = createLazyArray(() => _CAPABILITY_REFRESH_TRIGGER_IDS!);
+export const CAPABILITY_REFRESH_TRIGGER_IDS = createLazyArray<readonly number[]>(() => _CAPABILITY_REFRESH_TRIGGER_IDS!);
 export const CAPABILITY_REFRESH_DEPENDENCIES = createLazyRecord(() => _CAPABILITY_REFRESH_DEPENDENCIES!);
-export const RESTORE_PRIORITY_ORDER = createLazyArray(() => _RESTORE_PRIORITY_ORDER!);
-export const PRESET_REFRESH_TRIGGER_IDS = createLazyArray(() => _PRESET_REFRESH_TRIGGER_IDS!);
-export const DASHBOARD_SUB_SETTING_IDS = createLazyArray(() => _DASHBOARD_SUB_SETTING_IDS!);
-export const CAMERA_ADVANCED_SETTING_IDS = createLazyArray(() => _CAMERA_ADVANCED_SETTING_IDS!);
-export const PRESET_RESTORE_SYSTEM_SETTING_IDS = createLazyArray(() => _PRESET_RESTORE_SYSTEM_SETTING_IDS!);
+export const RESTORE_PRIORITY_ORDER = createLazyArray<readonly number[]>(() => _RESTORE_PRIORITY_ORDER!);
+export const PRESET_REFRESH_TRIGGER_IDS = createLazyArray<readonly number[]>(() => _PRESET_REFRESH_TRIGGER_IDS!);
+export const DASHBOARD_SUB_SETTING_IDS = createLazyArray<readonly number[]>(() => _DASHBOARD_SUB_SETTING_IDS!);
+export const CAMERA_ADVANCED_SETTING_IDS = createLazyArray<readonly number[]>(() => _CAMERA_ADVANCED_SETTING_IDS!);
+export const PRESET_RESTORE_SYSTEM_SETTING_IDS = createLazyArray<readonly number[]>(() => _PRESET_RESTORE_SYSTEM_SETTING_IDS!);

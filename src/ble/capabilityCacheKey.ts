@@ -33,7 +33,8 @@
  * of connection state the original method read) explicitly.
  */
 import type { CameraSpecificState } from '../store/GoProStore';
-import { GoProSettingId, getDisplaySettingPlan } from '../constants/GoProSettingIds';
+import { GoProSettingId } from '../constants/GoProSettingId';
+import { getDisplaySettingPlan } from '../constants/layout';
 import { selectIsShortTermBusy } from '../store/GoProSelectors';
 import { resolveCameraModelFromHardwareInfo } from '../cameraModels/shared/modelNumber';
 

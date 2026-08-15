@@ -20,7 +20,8 @@
  * SOFTWARE.
  */
 
-import { GoProSettingId, GoProPresetGroup } from '../constants/GoProSettingIds';
+import { GoProSettingId } from '../constants/GoProSettingId';
+import { GoProPresetGroup } from '../constants/GoProPresetGroup';
 import {
   getBoolValues,
   getPresetDisplayName,

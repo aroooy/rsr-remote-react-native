@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { GoProSettingId } from './GoProSettingIds';
+import { GoProSettingId } from './GoProSettingId';
 import { resolveModelNoFromCameraModelKey } from '../cameraModels/shared/modelNumber';
 import { isHero11OrNewerModel, isMaxModel } from '../cameraModels/shared/modelNoHelpers';
 import type { CameraModelKey } from './ResolutionAspectMap';

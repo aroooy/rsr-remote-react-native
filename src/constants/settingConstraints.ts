@@ -46,7 +46,7 @@
  */
 
 import { CameraModelKey } from './ResolutionAspectMap';
-import { GoProSettingId } from './GoProSettingIds';
+import { GoProSettingId } from './GoProSettingId';
 import { hero09SettingConstraintResolver } from '../cameraModels/hero09/constraints';
 import { hero10SettingConstraintResolver } from '../cameraModels/hero10/constraints';
 import { hero11SettingConstraintResolver } from '../cameraModels/hero11/constraints';

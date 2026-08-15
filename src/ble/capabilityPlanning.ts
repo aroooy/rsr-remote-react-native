@@ -29,11 +29,9 @@
  * active camera state before delegating here.
  */
 import type { CameraSpecificState } from '../store/GoProStore';
-import {
-  GoProSettingId,
-  GoProPresetGroup,
-  getDisplaySettingPlan,
-} from '../constants/GoProSettingIds';
+import { GoProSettingId } from '../constants/GoProSettingId';
+import { GoProPresetGroup } from '../constants/GoProPresetGroup';
+import { getDisplaySettingPlan } from '../constants/layout';
 import { isSettingModelSupported } from '../constants/settingConstraints';
 import { resolveCameraModelFromHardwareInfo } from '../cameraModels/shared/modelNumber';
 

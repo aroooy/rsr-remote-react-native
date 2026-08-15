@@ -37,7 +37,8 @@ import { useCurrentModelNo, useGoProStore, useActiveCameraState, useCameraModel 
 import { isMaxModel } from '../cameraModels/shared/modelNoHelpers';
 import { useShallow } from 'zustand/react/shallow';
 import { goProBle } from '../ble/GoProBLEManager';
-import { GoProSettingId, CAMERA_ADVANCED_SETTING_IDS } from '../constants/GoProSettingIds';
+import { GoProSettingId } from '../constants/GoProSettingId';
+import { CAMERA_ADVANCED_SETTING_IDS } from '../constants/capabilityDependencies';
 import {
   getSettingName,
   getSettingValueNameForModelWithContext,

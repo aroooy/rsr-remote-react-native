@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { GoProSettingId } from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
 import {
   MAX_360_PRESET_IDS,
   PRESET_MAX_TIMELAPSE,

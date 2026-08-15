@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { GoProSettingId } from '../GoProSettingIds';
+import { GoProSettingId } from '../GoProSettingId';
 
 /* =========================================================================
  * Base Order & Model Order Overrides

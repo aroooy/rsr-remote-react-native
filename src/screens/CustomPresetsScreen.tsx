@@ -44,7 +44,8 @@ import {
   updateSortOrders,
 } from '../device/CustomPresetRepository';
 import { goProBle } from '../ble/GoProBLEManager';
-import { GoProSettingId, GoProPresetGroup } from '../constants/GoProSettingIds';
+import { GoProSettingId } from '../constants/GoProSettingId';
+import { GoProPresetGroup } from '../constants/GoProPresetGroup';
 import { getThemeColors } from '../constants/Theme';
 import { getProductIdForModel, getProductDisplayName, IAPProductId } from '../iap/IAPProducts';
 import { purchaseProduct } from '../iap/IAPManager';

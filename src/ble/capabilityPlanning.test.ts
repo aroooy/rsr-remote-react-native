@@ -23,7 +23,8 @@
 import { describe, it, expect } from 'vitest';
 import { filterCapabilityIdsForCurrentContext } from './capabilityPlanning';
 import { createDefaultCameraState, type CameraSpecificState } from '../store/GoProStore';
-import { GoProSettingId, GoProPresetGroup } from '../constants/GoProSettingIds';
+import { GoProSettingId } from '../constants/GoProSettingId';
+import { GoProPresetGroup } from '../constants/GoProPresetGroup';
 
 const stateWith = (overrides: Partial<CameraSpecificState>): CameraSpecificState => ({
   ...createDefaultCameraState(),

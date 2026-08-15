@@ -22,7 +22,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { resolveTimelapseLayoutState } from './timelapseLayoutState';
-import { GoProSettingId } from './GoProSettingIds';
+import { GoProSettingId } from './GoProSettingId';
 import { PRESET_TIMELAPSE, PRESET_TIMEWARP } from './presetIds';
 import type { ResolveTimelapseLayoutParams } from '../cameraModels/shared/types';
 

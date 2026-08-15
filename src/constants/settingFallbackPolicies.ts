@@ -20,11 +20,11 @@
  * SOFTWARE.
  */
 
+import { GoProSettingId } from './GoProSettingId';
 import {
-  GoProSettingId,
   DASHBOARD_SUB_SETTING_IDS,
   CAMERA_ADVANCED_SETTING_IDS,
-} from './GoProSettingIds';
+} from './capabilityDependencies';
 import { CameraModelKey } from './ResolutionAspectMap';
 import { resolveModelNoFromCameraModelKey } from '../cameraModels/shared/modelNumber';
 import {

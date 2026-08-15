@@ -22,7 +22,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { hero12SettingConstraintResolver } from './constraints';
-import { GoProSettingId } from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
 import {
   GROUP_VIDEO,
   H12_PROFILE_HDR,

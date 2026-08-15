@@ -20,8 +20,9 @@
  * SOFTWARE.
  */
 
-import { getResolutionAspect, isHero12NewScheme } from '../../constants/ResolutionAspectMap';
-import { GoProSettingId } from '../../constants/GoProSettingIds';
+import { getResolutionAspect } from '../../constants/ResolutionAspectMap';
+import { isHero12NewScheme } from './resolution';
+import { GoProSettingId } from '../../constants/GoProSettingId';
 import { SPECIAL_ROW_KEYS } from '../../constants/specialRowsConstants';
 import type {
   Hero12EasyFramingValue,

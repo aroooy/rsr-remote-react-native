@@ -20,7 +20,8 @@
  * SOFTWARE.
  */
 
-import { GoProPresetGroup, GoProSettingId } from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
+import { GoProPresetGroup } from '../../constants/GoProPresetGroup';
 import {
   HERO13_EASY_ANAMORPHIC_NIGHT_PHOTO_PRESET,
   HERO13_EASY_ANAMORPHIC_SUPER_PHOTO_PRESET,

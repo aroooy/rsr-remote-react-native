@@ -20,14 +20,14 @@
  * SOFTWARE.
  */
 
+import { GoProSettingId } from '../../constants/GoProSettingId';
 import {
-  GoProSettingId,
   HERO11_LB_VIDEO_PRESETS,
   HERO11_NO_87_VIDEO_PRESETS,
-} from '../../constants/GoProSettingIds';
+} from '../../constants/layout';
+import { getHero11FallbackResolution } from './resolution';
 import {
   findResolutionForAspect,
-  getHero11FallbackResolution,
   getResolutionAspect,
   type AspectRatio,
 } from '../../constants/ResolutionAspectMap';

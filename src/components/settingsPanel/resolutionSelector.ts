@@ -20,11 +20,9 @@
  * SOFTWARE.
  */
 
-import {
-  EASY_VIDEO_PRESETS,
-  GoProPresetGroup,
-  GoProSettingId,
-} from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
+import { GoProPresetGroup } from '../../constants/GoProPresetGroup';
+import { EASY_VIDEO_PRESETS } from '../../constants/layout';
 import { filterPrimaryItemValues } from './primaryItemValues';
 import type { CameraModelKey } from '../../constants/ResolutionAspectMap';
 import type { CapabilitiesSnapshot, SettingsSnapshot } from '../../cameraModels/shared/types';

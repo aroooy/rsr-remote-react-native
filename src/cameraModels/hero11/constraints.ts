@@ -20,12 +20,12 @@
  * SOFTWARE.
  */
 
+import { GoProSettingId } from '../../constants/GoProSettingId';
 import {
-  GoProSettingId,
   HERO11_EB_VIDEO_PRESETS,
   HERO11_LB_VIDEO_PRESETS,
   classifyTimelapsePreset,
-} from '../../constants/GoProSettingIds';
+} from '../../constants/layout';
 import {
   GROUP_VIDEO,
   H11_RES_4K,

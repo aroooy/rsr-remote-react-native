@@ -49,42 +49,10 @@ export {
 // Re-export GoProPresetGroup symbols for backward compatibility
 export { GoProPresetGroup, GoProPresetGroupSelectId };
 
-// ── Derived ID arrays ────────────────────────────────────────────────────────────
-
-export const MODE_AND_PROFILE_SETTING_IDS: readonly number[] = [
-  GoProSettingId.MODE_PRESET_GROUP,
-  GoProSettingId.MODE_PRESET,
-] as const;
-
-export const PRIMARY_SETTING_IDS: readonly number[] = [
-  GoProSettingId.VIDEO_PROFILE,
-  GoProSettingId.RESOLUTION,
-  GoProSettingId.FPS,
-  GoProSettingId.VIDEO_LENS,
-  GoProSettingId.PHOTO_LENS,
-] as const;
-
-export const PRIMARY_SETTING_DISPLAY_ORDER: readonly number[] = [
-  GoProSettingId.VIDEO_PROFILE,
-  GoProSettingId.RESOLUTION,
-  GoProSettingId.FPS,
-  GoProSettingId.VIDEO_LENS,
-  GoProSettingId.PHOTO_LENS,
-] as const;
-
-// ── Re-exports from layout/ (split for modularity) ──────────────────────────────
-
-export type {
-  SettingsMap,
-  GoProDisplayLayout,
-  GoProLayoutExternalControls,
-  GoProSpecialRowsProjection,
-  GoProCapabilityCacheKeyProjection,
-  GoProDisplaySettingPlan,
-  TimelapseCategory,
-} from './layout';
-
 export {
+  MODE_AND_PROFILE_SETTING_IDS,
+  PRIMARY_SETTING_IDS,
+  PRIMARY_SETTING_DISPLAY_ORDER,
   findActivePreset,
   LayoutBuilder,
   composeDisplayLayout,

@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { GoProSettingId } from '../GoProSettingIds';
+import { GoProSettingId } from '../GoProSettingId';
 import type { SettingMetadata } from './types';
 
 // Migrate major setting items from legacy C# GoProAttribute.cs

@@ -21,7 +21,8 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { GoProSettingId, GoProPresetGroup } from '../constants/GoProSettingIds';
+import { GoProSettingId } from '../constants/GoProSettingId';
+import { GoProPresetGroup } from '../constants/GoProPresetGroup';
 import { generateDefaultPresetName } from './presetNaming';
 
 // Mock the i18n module to prevent loading expo-localization which crashes Node test environment

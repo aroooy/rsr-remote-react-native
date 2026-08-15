@@ -22,7 +22,8 @@
 
 import { useGoProStore, createDefaultCameraState, CameraSpecificState } from '../store/GoProStore';
 import { areSettingValuesEquivalent } from '../constants/GoProMetadata';
-import { GoProSettingId, FOUR_BYTE_SETTING_IDS } from '../constants/GoProSettingIds';
+import { GoProSettingId } from '../constants/GoProSettingId';
+import { FOUR_BYTE_SETTING_IDS } from '../constants/layout';
 import { debugLog, debugWarn } from '../utils/debugLogging';
 import {
   isHero11FamilyOrMaxModel,

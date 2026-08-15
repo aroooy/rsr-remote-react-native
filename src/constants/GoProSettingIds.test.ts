@@ -21,7 +21,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { classifyTimelapsePreset, isTimelapseLikePreset } from './GoProSettingIds';
+import { classifyTimelapsePreset, isTimelapseLikePreset } from './layout';
 import {
   PRESET_TIMELAPSE,
   PRESET_NIGHTLAPSE,

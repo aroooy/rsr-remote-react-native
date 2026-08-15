@@ -20,7 +20,8 @@
  * SOFTWARE.
  */
 
-import { GoProSettingId, classifyTimelapsePreset } from './GoProSettingIds';
+import { GoProSettingId } from './GoProSettingId';
+import { classifyTimelapsePreset } from './layout';
 import { GOPRO_SETTINGS_METADATA } from './metadata/baseSettingMetadata';
 import { GOPRO_SETTING_VALUE_ORDER } from './metadata/baseValueOrder';
 import type { SettingMetadata, SliderConfig } from './metadata/types';

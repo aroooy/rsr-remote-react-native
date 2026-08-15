@@ -20,12 +20,12 @@
  * SOFTWARE.
  */
 
+import { GoProSettingId } from '../../constants/GoProSettingId';
 import {
   EASY_VIDEO_PRESETS,
   HERO11_EASY_PHOTO_PRESETS,
   HERO11_EASY_TIMELAPSE_PRESETS,
-  GoProSettingId,
-} from '../../constants/GoProSettingIds';
+} from '../../constants/layout';
 import { dispatchSelectableValuesResolver } from '../../cameraModels/shared/selectableValues';
 import { hero09SelectableValuesResolver } from '../../cameraModels/hero09/selectableValues';
 import { hero10SelectableValuesResolver } from '../../cameraModels/hero10/selectableValues';

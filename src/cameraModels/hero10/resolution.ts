@@ -20,27 +20,17 @@
  * SOFTWARE.
  */
 
-import { GoProSettingId } from '../GoProSettingId';
-import type { ModelMetadataOverrides } from './types';
+import type { ResolutionEntry } from '../shared/types';
 
-export const hero09MetadataOverrides: ModelMetadataOverrides = {
-  valueOverrides: {
-    [GoProSettingId.VIDEO_BITRATE_HERO11]: { 0: 'Standard' },
-    [GoProSettingId.MEDIA_MOD_MIC]: { 0: 'Camera Mics' },
-  },
-  staticFallbacks: {
-    [GoProSettingId.MEDIA_MOD_MIC]: [0, 1, 2],
-    [GoProSettingId.LOOPING_INTERVAL]: [1, 2, 3, 4],
-    [GoProSettingId.PHOTO_LENS]: [100, 101, 102, 19],
-    [GoProSettingId.TIME_LAPSE_LENS]: [101, 102, 19],
-    [GoProSettingId.ORIENTATION]: [100, 5],
-  },
-  valueOrderOverrides: {
-    [GoProSettingId.BURST_RATE]: [11, 8, 7, 4, 14, 2, 1, 0, 9],
-  },
-  presetNameOverrides: {
-    196608: 'Max Video',
-    262144: 'Max Photo',
-    327680: 'Max TimeWarp',
-  },
+/** HERO10 resolution map */
+export const HERO10_RESOLUTION_MAP: Record<number, ResolutionEntry> = {
+  // 16:9
+  100: { label: '5.3K', aspect: '16:9', family: '5.3K' },
+  1: { label: '4K', aspect: '16:9', family: '4K' },
+  4: { label: '2.7K', aspect: '16:9', family: '2.7K' },
+  9: { label: '1080', aspect: '16:9', family: '1080' },
+  // 4:3
+  25: { label: '5K 4:3', aspect: '4:3', family: '5K' },
+  18: { label: '4K 4:3', aspect: '4:3', family: '4K' },
+  6: { label: '2.7K 4:3', aspect: '4:3', family: '2.7K' },
 };

@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { GoProSettingId } from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
 import type { ForceQuickVisibilityResolver } from '../shared/types';
 
 export const hero12ForcedQuickVisibilityResolver: ForceQuickVisibilityResolver = ({

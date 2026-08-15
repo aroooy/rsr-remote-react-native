@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { GoProPresetGroup } from '../../constants/GoProSettingIds';
+import { GoProPresetGroup } from '../../constants/GoProPresetGroup';
 import {
   PRESET_ACTIVITY,
   PRESET_ANAMORPHIC_NIGHT_PHOTO,

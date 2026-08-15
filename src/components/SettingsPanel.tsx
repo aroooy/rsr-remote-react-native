@@ -58,17 +58,15 @@ import {
   dedupeEquivalentSettingValues,
 } from '../constants/GoProMetadata';
 import { SliderSettingRow } from './SliderSettingRow';
+import { GoProSettingId } from '../constants/GoProSettingId';
+import { GoProPresetGroup, GoProPresetGroupSelectId } from '../constants/GoProPresetGroup';
+import { CAMERA_ADVANCED_SETTING_IDS, DASHBOARD_SUB_SETTING_IDS } from '../constants/capabilityDependencies';
 import {
-  GoProSettingId,
   MODE_AND_PROFILE_SETTING_IDS,
   getDisplaySettingPlan,
-  GoProPresetGroup,
-  GoProPresetGroupSelectId,
   fallbackPresetsByModel,
   isDefaultVisibleAdvancedSetting,
   GoProVideoPreset,
-  CAMERA_ADVANCED_SETTING_IDS,
-  DASHBOARD_SUB_SETTING_IDS,
   LAPSE_WITH_PHOTO_PRESETS,
   classifyTimelapsePreset,
   isTimelapseLikePreset,
@@ -81,7 +79,7 @@ import {
   HERO11_EASY_TIMELAPSE_PRESETS,
   HERO11_LB_VIDEO_PRESETS,
   HERO11_NO_87_VIDEO_PRESETS,
-} from '../constants/GoProSettingIds';
+} from '../constants/layout';
 import { getPresetDisplayName } from '../constants/GoProMetadata';
 import { goProBle } from '../ble/GoProBLEManager';
 import { PreviewPlayer } from './PreviewPlayer';

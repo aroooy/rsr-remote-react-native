@@ -20,14 +20,13 @@
  * SOFTWARE.
  */
 
-import { GoProSettingId } from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
 import { PRESET_MAX_TIMEWARP } from '../../constants/presetIds';
+import { getHero12FallbackResolution, isHero12NewScheme } from './resolution';
 import {
   findResolutionForAspect,
-  getHero12FallbackResolution,
   getResolutionAspect,
   getResolutionMap,
-  isHero12NewScheme,
   type AspectRatio,
 } from '../../constants/ResolutionAspectMap';
 import { DEFAULT_FRAMING_OPTIONS } from '../shared/framingHelpers';

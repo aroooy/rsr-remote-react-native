@@ -20,7 +20,8 @@
  * SOFTWARE.
  */
 
-import { GoProSettingId, classifyTimelapsePreset } from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
+import { classifyTimelapsePreset } from '../../constants/layout';
 import {
   GROUP_VIDEO,
   H13_PROFILE_HDR_NEW,

@@ -20,13 +20,13 @@
  * SOFTWARE.
  */
 
+import { GoProSettingId } from '../../constants/GoProSettingId';
 import {
   EASY_VIDEO_PRESETS,
-  GoProSettingId,
   GoProVideoPreset,
   HERO13_EASY_MAXLENS2_PRESET_IDS,
   MACRO_VIDEO_PRESET_HERO13,
-} from '../../constants/GoProSettingIds';
+} from '../../constants/layout';
 import {
   HERO13_EASY_ANAMORPHIC_TIMEWARP_PRESET,
   HERO13_EASY_MAX_VIDEO_PRESET,

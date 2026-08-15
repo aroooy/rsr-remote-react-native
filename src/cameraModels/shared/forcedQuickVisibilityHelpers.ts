@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { GoProSettingId } from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
 import { MAX_360_PRESET_IDS, PRESET_MAX_VIDEO } from '../../constants/presetIds';
 import type { ForceQuickVisibilityResolver } from './types';
 import { resolveModelNoFromCameraModelKey } from './modelNumber';

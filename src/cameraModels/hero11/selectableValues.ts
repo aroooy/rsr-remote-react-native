@@ -24,10 +24,10 @@ import {
   EASY_VIDEO_PRESETS,
   HERO11_EASY_PHOTO_PRESETS,
   HERO11_EASY_TIMELAPSE_PRESETS,
-  GoProPresetGroup,
-  GoProSettingId,
   classifyTimelapsePreset,
-} from '../../constants/GoProSettingIds';
+} from '../../constants/layout';
+import { GoProPresetGroup } from '../../constants/GoProPresetGroup';
+import { GoProSettingId } from '../../constants/GoProSettingId';
 import { PRESET_MAX_VIDEO } from '../../constants/presetIds';
 import { isAntiFlicker50Hz } from '../shared/selectableValueHelpers';
 import type { SelectableValuesResolver } from '../shared/types';

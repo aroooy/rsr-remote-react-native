@@ -20,7 +20,8 @@
  * SOFTWARE.
  */
 
-import { GoProPresetGroup, GoProSettingId } from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
+import { GoProPresetGroup } from '../../constants/GoProPresetGroup';
 import { PRESET_MAX_TIMEWARP, PRESET_MAX_TIMEWARP_2 } from '../../constants/presetIds';
 import { getResolutionAspect } from '../../constants/ResolutionAspectMap';
 import { isAntiFlicker50Hz } from '../shared/selectableValueHelpers';

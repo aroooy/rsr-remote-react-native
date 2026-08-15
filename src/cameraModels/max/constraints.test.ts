@@ -22,7 +22,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { maxSettingConstraintResolver } from './constraints';
-import { GoProSettingId } from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
 
 describe('maxSettingConstraintResolver', () => {
   it('DEFAULT_PRESET_MAX is always disabled', () => {

@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { GoProSettingId } from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
 import { resolveLegacyMaxVideoHorizontalLevelingVisibility } from '../shared/forcedQuickVisibilityHelpers';
 import type { ForceQuickVisibilityResolver } from '../shared/types';
 

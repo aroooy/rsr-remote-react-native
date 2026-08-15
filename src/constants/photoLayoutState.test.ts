@@ -22,7 +22,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { resolvePhotoLayoutState } from './photoLayoutState';
-import { GoProSettingId } from './GoProSettingIds';
+import { GoProSettingId } from './GoProSettingId';
 import { PRESET_PHOTO, PRESET_NIGHT_PHOTO, PRESET_BURST, PRESET_LIVE_BURST } from './presetIds';
 import type { ResolvePhotoLayoutParams } from '../cameraModels/shared/types';
 

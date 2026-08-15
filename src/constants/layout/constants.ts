@@ -21,6 +21,27 @@
  */
 
 import { GoProSettingId } from '../GoProSettingId';
+
+export const MODE_AND_PROFILE_SETTING_IDS: readonly number[] = [
+  GoProSettingId.MODE_PRESET_GROUP,
+  GoProSettingId.MODE_PRESET,
+] as const;
+
+export const PRIMARY_SETTING_IDS: readonly number[] = [
+  GoProSettingId.VIDEO_PROFILE,
+  GoProSettingId.RESOLUTION,
+  GoProSettingId.FPS,
+  GoProSettingId.VIDEO_LENS,
+  GoProSettingId.PHOTO_LENS,
+] as const;
+
+export const PRIMARY_SETTING_DISPLAY_ORDER: readonly number[] = [
+  GoProSettingId.VIDEO_PROFILE,
+  GoProSettingId.RESOLUTION,
+  GoProSettingId.FPS,
+  GoProSettingId.VIDEO_LENS,
+  GoProSettingId.PHOTO_LENS,
+] as const;
 import { CameraModelKey } from '../ResolutionAspectMap';
 import { GoProPresetGroup } from '../GoProPresetGroup';
 import {

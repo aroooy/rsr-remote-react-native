@@ -38,7 +38,7 @@
  * Legacy app reference: GetSetTrailLengthCommand / GetSetHorizontalLeveling /
  * GetSetHorizontalLock in ViewModels/{Hero11,HeroMini11,Max}/FullControlPanelViewModel.cs
  */
-import { GoProSettingId } from './GoProSettingIds';
+import { GoProSettingId } from './GoProSettingId';
 import {
   isHero11FamilyModel,
   isHero11FamilyOrMaxModel,

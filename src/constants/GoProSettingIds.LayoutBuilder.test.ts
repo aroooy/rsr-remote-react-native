@@ -21,7 +21,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { LayoutBuilder } from './GoProSettingIds';
+import { LayoutBuilder } from './layout';
 
 describe('LayoutBuilder', () => {
   it('creates empty layout by default', () => {

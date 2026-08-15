@@ -51,14 +51,11 @@ import {
   CAPABILITY_REFRESH_TRIGGER_IDS,
   PRESET_REFRESH_TRIGGER_IDS,
   PRESET_RESTORE_SYSTEM_SETTING_IDS,
-  getCapabilityDependencyRefreshIds,
-  getDisplaySettingPlan,
-  GoProSettingId,
-  GoProPresetGroup,
-  GoProPresetGroupSelectId,
   RESTORE_PRIORITY_ORDER,
-  FOUR_BYTE_SETTING_IDS,
-} from '../constants/GoProSettingIds';
+} from '../constants/capabilityDependencies';
+import { GoProSettingId } from '../constants/GoProSettingId';
+import { GoProPresetGroup, GoProPresetGroupSelectId } from '../constants/GoProPresetGroup';
+import { getCapabilityDependencyRefreshIds, getDisplaySettingPlan, FOUR_BYTE_SETTING_IDS } from '../constants/layout';
 import { isSystemSetting } from '../constants/SystemSettings';
 import { CommandQueue, BusyRejectedError } from './CommandQueue';
 import { selectIsShortTermBusy, CommandCategory } from '../store/GoProSelectors';

@@ -22,7 +22,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { resolveOutgoingBleSettingId, INCOMING_SETTING_SYNC_RULES } from './settingIdAliases';
-import { GoProSettingId } from './GoProSettingIds';
+import { GoProSettingId } from './GoProSettingId';
 import { GOPRO_MODEL_NUMBERS } from './GoProModelNumbers';
 
 const { HERO11_BLACK, HERO11_BLACK_MINI, HERO12_BLACK, HERO13_BLACK, MAX, HERO09_BLACK } =

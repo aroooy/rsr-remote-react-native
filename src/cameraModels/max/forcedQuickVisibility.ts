@@ -20,7 +20,8 @@
  * SOFTWARE.
  */
 
-import { GoProPresetGroup, GoProSettingId } from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
+import { GoProPresetGroup } from '../../constants/GoProPresetGroup';
 import { isMax360Preset } from '../shared/forcedQuickVisibilityHelpers';
 import type { ForceQuickVisibilityResolver } from '../shared/types';
 

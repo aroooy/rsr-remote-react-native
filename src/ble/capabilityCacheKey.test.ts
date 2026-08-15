@@ -23,7 +23,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildCapabilityCacheKey } from './capabilityCacheKey';
 import { createDefaultCameraState, type CameraSpecificState } from '../store/GoProStore';
-import { GoProSettingId } from '../constants/GoProSettingIds';
+import { GoProSettingId } from '../constants/GoProSettingId';
 import type { HardwareInfo } from '../types/KnownDevice';
 
 const hwInfo: HardwareInfo = {

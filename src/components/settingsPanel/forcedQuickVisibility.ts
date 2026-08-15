@@ -20,11 +20,9 @@
  * SOFTWARE.
  */
 
-import {
-  BURST_LIKE_PHOTO_PRESETS,
-  GoProPresetGroup,
-  GoProSettingId,
-} from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
+import { GoProPresetGroup } from '../../constants/GoProPresetGroup';
+import { BURST_LIKE_PHOTO_PRESETS } from '../../constants/layout';
 import { hero09ForcedQuickVisibilityResolver } from '../../cameraModels/hero09/forcedQuickVisibility';
 import { hero10ForcedQuickVisibilityResolver } from '../../cameraModels/hero10/forcedQuickVisibility';
 import { hero11ForcedQuickVisibilityResolver } from '../../cameraModels/hero11/forcedQuickVisibility';

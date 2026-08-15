@@ -21,7 +21,7 @@
  */
 
 import { GOPRO_SETTINGS_METADATA } from '../../constants/GoProMetadata';
-import { GoProSettingId } from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
 import { getSettingConstraint } from '../../constants/settingConstraints';
 import { dispatchOtherItemResolver } from '../../cameraModels/shared/otherItem';
 import type {

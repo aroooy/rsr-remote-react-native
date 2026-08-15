@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { GoProSettingId } from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
 import { PRESET_MAX_VIDEO } from '../../constants/presetIds';
 import type { SelectableValuesResolver } from '../shared/types';
 

@@ -22,7 +22,17 @@
 
 import type { GoProPreset } from '../../ble/PresetProtobuf';
 import type { GoProPresetGroupData } from '../../ble/PresetProtobuf';
-import type { CameraModelKey } from '../../constants/ResolutionAspectMap';
+import type { CameraModelKey } from './modelManifest';
+
+export type AspectRatio = '16:9' | '4:3' | '8:7' | '9:16';
+
+export type ResolutionFamily = '5.3K' | '5K' | '4K' | '2.7K' | '1080' | '1440' | '720' | 'other';
+
+export interface ResolutionEntry {
+  label: string;
+  aspect: AspectRatio;
+  family: ResolutionFamily;
+}
 
 export type ModelResolverMap<T> = Partial<Record<number, T>>;
 

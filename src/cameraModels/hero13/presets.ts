@@ -29,7 +29,7 @@ import {
   HERO13_EASY_MAXLENS2_PRESET_IDS,
   HERO13_EASY_NORMAL_PRESET_GROUPS,
   HERO13_EASY_NORMAL_PRESET_IDS,
-} from '../../constants/GoProSettingIds';
+} from '../../constants/layout';
 import { applyPresetSupplement, getReceivedGroupPresets } from '../shared/presets';
 import type { CurrentGroupPresetsResolver } from '../shared/types';
 

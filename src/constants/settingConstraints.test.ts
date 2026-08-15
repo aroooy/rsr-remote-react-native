@@ -22,7 +22,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { isSettingModelSupported } from './settingConstraints';
-import { GoProSettingId } from './GoProSettingIds';
+import { GoProSettingId } from './GoProSettingId';
 
 describe('isSettingModelSupported', () => {
   it('returns true when camera model is null (not connected)', () => {

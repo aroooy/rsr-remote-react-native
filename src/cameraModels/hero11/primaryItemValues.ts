@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { GoProSettingId } from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
 import { getResolutionAspect } from '../../constants/ResolutionAspectMap';
 import type { PrimaryItemValuesResolver } from '../shared/types';
 

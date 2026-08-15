@@ -34,6 +34,9 @@ export { findActivePreset, LayoutBuilder, composeDisplayLayout } from './types';
 // Constants
 export type { TimelapseCategory } from './constants';
 export {
+  MODE_AND_PROFILE_SETTING_IDS,
+  PRIMARY_SETTING_IDS,
+  PRIMARY_SETTING_DISPLAY_ORDER,
   GoProVideoPreset,
   fallbackPresetsByModel,
   EASY_VIDEO_PRESETS,

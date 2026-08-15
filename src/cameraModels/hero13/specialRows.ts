@@ -20,11 +20,9 @@
  * SOFTWARE.
  */
 
-import {
-  GoProPresetGroup,
-  GoProSettingId,
-  GoProVideoPreset,
-} from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
+import { GoProPresetGroup } from '../../constants/GoProPresetGroup';
+import { GoProVideoPreset } from '../../constants/layout';
 import { SPECIAL_ROW_KEYS } from '../../constants/specialRowsConstants';
 import type { ResolveSpecialRowsParams, SpecialRow, SpecialRowsResolver } from '../shared/types';
 import { getHero13SpecialRowsProjection } from './specialRowsProjection';

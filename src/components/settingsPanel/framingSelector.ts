@@ -20,15 +20,15 @@
  * SOFTWARE.
  */
 
+import { GoProSettingId } from '../../constants/GoProSettingId';
+import { GoProPresetGroup } from '../../constants/GoProPresetGroup';
 import {
   EASY_VIDEO_PRESETS,
-  GoProPresetGroup,
-  GoProSettingId,
   HERO11_EASY_TIMELAPSE_PRESETS,
   HERO12_NO_ASPECT_EASY_VIDEO_PRESETS,
   LAPSE_WITH_PHOTO_PRESETS,
   classifyTimelapsePreset,
-} from '../../constants/GoProSettingIds';
+} from '../../constants/layout';
 import { hero11FramingSelectorResolver } from '../../cameraModels/hero11/framing';
 import { hero12FramingSelectorResolver } from '../../cameraModels/hero12/framing';
 import { hero13FramingSelectorResolver } from '../../cameraModels/hero13/framing';

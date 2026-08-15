@@ -20,12 +20,9 @@
  * SOFTWARE.
  */
 
-import {
-  EASY_VIDEO_PRESETS,
-  GoProPresetGroup,
-  GoProSettingId,
-  classifyTimelapsePreset,
-} from '../../constants/GoProSettingIds';
+import { GoProSettingId } from '../../constants/GoProSettingId';
+import { GoProPresetGroup } from '../../constants/GoProPresetGroup';
+import { EASY_VIDEO_PRESETS, classifyTimelapsePreset } from '../../constants/layout';
 import { PRESET_MAX_VIDEO } from '../../constants/presetIds';
 import { isAntiFlicker50Hz } from '../shared/selectableValueHelpers';
 import type { SelectableValuesResolver } from '../shared/types';
