@@ -43,12 +43,14 @@ import {
   selectIsUserHoldingCamera,
 } from '../store/GoProSelectors';
 
-export type BusyRejectReason =
-  | 'userOnCamera' // Status 114=1: User is operating the camera body
-  | 'encoding' // Status 10=1 or HindSight is Active
-  | 'shortTermTimeout' // SystemBusy/Ready wait timeout
-  | 'dynamic' // Setting ID that dynamically learned 403 rejection
-  | 'notReady'; // Status 82=0 static not ready (without waiting for timeout)
+import {
+  evaluateShootingLockRejection,
+  evaluateDynamicLockRejection,
+  shouldWaitForReady,
+  type BusyRejectReason,
+} from './commandQueueRules';
+
+export type { BusyRejectReason };
 
 export class BusyRejectedError extends Error {
   readonly reason: BusyRejectReason;
@@ -113,36 +115,26 @@ export class CommandQueue {
 
       // Lane B: Reject shooting settings immediately if recording
       const cameraBefore = selectActiveCameraState(useGoProStore.getState());
-      if (
-        opts.category !== 'emergency' &&
-        opts.category !== 'systemSetting' &&
-        opts.category !== 'shutter' &&
-        opts.category !== 'control' &&
-        selectIsShootingLocked(cameraBefore)
-      ) {
-        throw new BusyRejectedError('encoding', opts.category, opts.label);
+      const isShootingLocked = selectIsShootingLocked(cameraBefore);
+
+      const shootingLockReason = evaluateShootingLockRejection(opts.category, isShootingLocked);
+      if (shootingLockReason) {
+        throw new BusyRejectedError(shootingLockReason, opts.category, opts.label);
       }
 
       // Dynamic learning: Pre-emptively reject settings that previously returned 403 during recording
-      if (
-        opts.settingId !== undefined &&
-        selectIsShootingLocked(cameraBefore) &&
-        cameraBefore.dynamicShootingLockedIds.has(opts.settingId)
-      ) {
-        throw new BusyRejectedError('dynamic', opts.category, opts.label);
+      const dynamicReason = evaluateDynamicLockRejection(
+        opts.settingId,
+        isShootingLocked,
+        cameraBefore.dynamicShootingLockedIds,
+      );
+      if (dynamicReason) {
+        throw new BusyRejectedError(dynamicReason, opts.category, opts.label);
       }
 
       // Lane A: Wait for SystemBusy/NotReady to clear
-      // Since shutter commands may return SystemBusy=1 / Ready=0 even when stopping recording,
-      // blocking them during wait would prevent stopping. Bypass Lane A like emergency commands.
-      // systemSetting represents camera settings (e.g., LCD brightness) that can be sent during recording,
-      // so transmit them directly without waiting for systemBusy state to clear.
-      if (
-        opts.category !== 'emergency' &&
-        opts.category !== 'shutter' &&
-        opts.category !== 'systemSetting' &&
-        selectIsShortTermBusy(selectActiveCameraState(useGoProStore.getState()))
-      ) {
+      const isShortTermBusy = selectIsShortTermBusy(selectActiveCameraState(useGoProStore.getState()));
+      if (shouldWaitForReady(opts.category, isShortTermBusy)) {
         if (waitPolicy === 'rejectImmediately') {
           throw new BusyRejectedError('notReady', opts.category, opts.label);
         }
