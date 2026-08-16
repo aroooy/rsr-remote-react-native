@@ -30,6 +30,7 @@ import {
 } from 'react-native-ble-plx';
 import { Platform } from 'react-native';
 import { t } from '../i18n';
+import { classifyBleError, handleBleError } from './bleErrorHandler';
 import {
   warnUnexpectedDisconnect,
   startConnectionForegroundService,
@@ -530,19 +531,16 @@ class GoProBLEManager {
   }
 
   private isCancellationError(error: unknown, deviceId?: string) {
-    const err = error as { message?: string } | null | undefined;
-    const message = String(err?.message || error || '').toLowerCase();
     return (
-      message.includes('operation was cancelled') ||
-      message.includes('cancelled') ||
-      (!!deviceId && this.cancelledDeviceIds.has(deviceId))
+      classifyBleError(error, {
+        deviceId,
+        cancelledDeviceIds: this.cancelledDeviceIds,
+      }) === 'CANCELED'
     );
   }
 
   private isManagerDestroyedError(error: unknown) {
-    const err = error as { message?: string } | null | undefined;
-    const message = String(err?.message || error || '').toLowerCase();
-    return message.includes('ble manager was destroyed');
+    return classifyBleError(error) === 'MANAGER_DESTROYED';
   }
 
   public isDeviceConnected(deviceId: string) {
@@ -962,13 +960,14 @@ class GoProBLEManager {
         return await this.completeConnectionSetup(device, connected, 1500);
       }
     } catch (e: unknown) {
-      if (this.isManagerDestroyedError(e)) {
-        this.recreateManager();
-      }
-      if (!this.isCancellationError(e, device.id)) {
-        debugError('ble', 'Connection failed:', e);
-        this.ui.alert(t('ble.connectionError'), (e as Error)?.message || String(e));
-      }
+      handleBleError(e, {
+        deviceId: device.id,
+        cancelledDeviceIds: this.cancelledDeviceIds,
+        actionName: 'Connection',
+        recreateManager: () => this.recreateManager(),
+        showAlert: (title, msg) => this.ui.alert(title, msg),
+        alertTitle: t('ble.connectionError'),
+      });
       this.clearConnectionResources(device.id);
       store.beginDisconnectForDevice(device.id);
       store.setActiveScreen('home');
