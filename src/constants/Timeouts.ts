@@ -58,10 +58,13 @@ export const BLE_CAPABILITY_QUERY_INTERVAL_MS = 60;
 /** Delay before retrying hardware info query (500 milliseconds). */
 export const BLE_HARDWARE_INFO_RETRY_DELAY_MS = 500;
 
-// ── BLE Response & Notification Timeouts ─────────────────────────────────────
+/** Maximum polling duration waiting for camera encoding/busy release before power off (5 seconds). */
+export const BLE_READY_POLL_TIMEOUT_MS = 5_000;
 
-/** Default timeout for BLE notification responses (3 seconds). */
-export const BLE_DEFAULT_NOTIFICATION_TIMEOUT_MS = 3_000;
+/** Interval between status polling checks while waiting for camera ready state (200 milliseconds). */
+export const BLE_READY_POLL_INTERVAL_MS = 200;
+
+// ── BLE Response & Notification Timeouts ─────────────────────────────────────
 
 /** Extended timeout for slow operations like preset switches or wifi setup (5 seconds). */
 export const BLE_EXTENDED_NOTIFICATION_TIMEOUT_MS = 5_000;

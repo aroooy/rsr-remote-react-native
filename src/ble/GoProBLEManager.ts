@@ -67,6 +67,8 @@ import {
   BLE_BOOTSTRAP_PRESET_DELAY_MS,
   BLE_CAPABILITY_QUERY_INTERVAL_MS,
   BLE_HARDWARE_INFO_RETRY_DELAY_MS,
+  BLE_READY_POLL_TIMEOUT_MS,
+  BLE_READY_POLL_INTERVAL_MS,
   BLE_EXTENDED_NOTIFICATION_TIMEOUT_MS,
   BLE_PRESET_UPDATE_TIMEOUT_MS,
   CAPABILITY_REFRESH_DEBOUNCE_MS,
@@ -1064,15 +1066,13 @@ class GoProBLEManager {
       }
 
       // Poll up to ~5 seconds until isEncoding=false and systemBusy=false
-      const READY_TIMEOUT_MS = 5000;
-      const POLL_INTERVAL_MS = 200;
       const startedAt = Date.now();
-      while (Date.now() - startedAt < READY_TIMEOUT_MS) {
+      while (Date.now() - startedAt < BLE_READY_POLL_TIMEOUT_MS) {
         const freshState = useGoProStore.getState().cameraStates[targetId];
         if (freshState && !freshState.isEncoding && !freshState.systemBusy) {
           break;
         }
-        await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+        await new Promise((r) => setTimeout(r, BLE_READY_POLL_INTERVAL_MS));
       }
     }
 
@@ -1126,17 +1126,15 @@ class GoProBLEManager {
       );
 
       // Wait by polling (max 5 seconds)
-      const READY_TIMEOUT_MS = 5000;
-      const POLL_INTERVAL_MS = 200;
       const startedAt = Date.now();
-      while (Date.now() - startedAt < READY_TIMEOUT_MS) {
+      while (Date.now() - startedAt < BLE_READY_POLL_TIMEOUT_MS) {
         const freshStore = useGoProStore.getState();
         const stillBusy = connectedIds.some((id) => {
           const s = freshStore.cameraStates[id];
           return s && (s.isEncoding || s.systemBusy);
         });
         if (!stillBusy) break;
-        await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+        await new Promise((r) => setTimeout(r, BLE_READY_POLL_INTERVAL_MS));
       }
     } else {
       const ok = await this.ui.confirm({
