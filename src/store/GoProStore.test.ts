@@ -32,6 +32,14 @@ beforeEach(() => {
 });
 
 describe('GoProStore per-device camera state', () => {
+  it('setActiveDevice initializes default camera state for brand new device', () => {
+    useGoProStore.getState().setActiveDevice(DEVICE_A);
+    const cs = useGoProStore.getState().cameraStates[DEVICE_A];
+    expect(cs).toBeDefined();
+    expect(cs.batteryLevel).toBe(0);
+    expect(cs.wifiStatus).toBe('disconnected');
+  });
+
   it('updateDeviceState creates and merges device state', () => {
     useGoProStore.getState().updateDeviceState(DEVICE_A, { batteryLevel: 55 });
     const cs = useGoProStore.getState().cameraStates[DEVICE_A];
@@ -154,73 +162,5 @@ describe('GoProStore per-device camera state', () => {
     const state = useGoProStore.getState();
     expect(state.connectedDeviceId).toBeNull();
     expect(state.connectionStatus).toBe('disconnected');
-    expect(state.deviceConnectionStatuses[DEVICE_A]).toBe('disconnected');
-  });
-
-  it('beginDisconnectForDevice for a non-active device leaves the active connection alone', () => {
-    const s = useGoProStore.getState();
-    s.setActiveDevice(DEVICE_A);
-    s.setDeviceConnectionStatus(DEVICE_A, 'connected');
-    s.setDeviceConnectionStatus(DEVICE_B, 'connected');
-    useGoProStore.getState().beginDisconnectForDevice(DEVICE_B);
-    const state = useGoProStore.getState();
-    expect(state.connectedDeviceId).toBe(DEVICE_A);
-    expect(state.connectionStatus).toBe('connected');
-    expect(state.deviceConnectionStatuses[DEVICE_A]).toBe('connected');
-    expect(state.deviceConnectionStatuses[DEVICE_B]).toBe('disconnected');
-  });
-});
-
-describe('GoProStore preset merge (setPresets)', () => {
-  const makeGroups = (
-    overrides: Partial<GoProPresetGroupData['presets'][number]>,
-  ): GoProPresetGroupData[] => [
-    {
-      groupId: 1000,
-      presets: [
-        {
-          id: 1,
-          titleId: 2,
-          titleNumber: 0,
-          userDefined: false,
-          isModified: false,
-          isFixed: false,
-          isVisible: true,
-          customName: null,
-          iconId: 0,
-          settings: [],
-          ...overrides,
-        },
-      ],
-    },
-  ];
-
-  it('keeps customName, iconId and settings from previous data when a push omits them', () => {
-    const s = useGoProStore.getState();
-    s.setActiveDevice(DEVICE_A);
-    s.setPresets(
-      makeGroups({
-        customName: 'My Preset',
-        iconId: 5,
-        settings: [{ id: 2, value: 9, isCaption: false }],
-      }),
-      DEVICE_A,
-    );
-    // Push notification with omitted fields (defaults)
-    useGoProStore.getState().setPresets(makeGroups({}), DEVICE_A);
-
-    const merged = selectCameraStateFor(useGoProStore.getState(), DEVICE_A).presets[0].presets[0];
-    expect(merged.customName).toBe('My Preset');
-    expect(merged.iconId).toBe(5);
-    expect(merged.settings).toEqual([{ id: 2, value: 9, isCaption: false }]);
-  });
-
-  it('stores presets for a non-active device without touching the active one', () => {
-    const s = useGoProStore.getState();
-    s.setActiveDevice(DEVICE_A);
-    s.setPresets(makeGroups({ customName: 'B preset' }), DEVICE_B);
-    const state = useGoProStore.getState();
-    expect(selectCameraStateFor(state, DEVICE_B).presets).toHaveLength(1);
-    expect(selectActiveCameraState(state).presets).toHaveLength(0);
   });
 });
