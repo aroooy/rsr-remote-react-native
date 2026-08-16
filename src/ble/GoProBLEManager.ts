@@ -129,7 +129,12 @@ import {
   buildFetchPresetStatusPacket,
   buildCustomPresetUpdatePacket,
 } from './bleCommandPackets';
-import { buildCapabilityCacheKey } from './capabilityCacheKey';
+import {
+  getCapabilityCacheKey as getCapabilityCacheKeyHelper,
+  enqueuePendingCapabilityCacheKey as enqueueCapabilityCacheKeyHelper,
+  consumePendingCapabilityCacheKey as consumeCapabilityCacheKeyHelper,
+  evaluateCapabilityCacheHit as evaluateCapabilityCacheHitHelper,
+} from './capabilityManager';
 import {
   isPresetStatusPacket,
   parsePresetStatusPacket,
@@ -464,23 +469,13 @@ class GoProBLEManager {
   private enqueuePendingCapabilityCacheKey(settingId: number, cacheKey: string, deviceId?: string) {
     const conn = this.getConn(deviceId);
     if (!conn) return;
-    const queue = conn.pendingCapabilityCacheKeys.get(settingId) ?? [];
-    queue.push(cacheKey);
-    conn.pendingCapabilityCacheKeys.set(settingId, queue);
+    enqueueCapabilityCacheKeyHelper(conn.pendingCapabilityCacheKeys, settingId, cacheKey);
   }
 
   private consumePendingCapabilityCacheKey(settingId: number, deviceId?: string): string | null {
     const conn = this.getConn(deviceId);
     if (!conn) return null;
-    const queue = conn.pendingCapabilityCacheKeys.get(settingId);
-    if (!queue || queue.length === 0) return null;
-    const cacheKey = queue.shift() ?? null;
-    if (queue.length === 0) {
-      conn.pendingCapabilityCacheKeys.delete(settingId);
-    } else {
-      conn.pendingCapabilityCacheKeys.set(settingId, queue);
-    }
-    return cacheKey;
+    return consumeCapabilityCacheKeyHelper(conn.pendingCapabilityCacheKeys, settingId);
   }
 
   private clearConnectionResources(deviceId: string) {
@@ -821,7 +816,7 @@ class GoProBLEManager {
     const targetId = deviceId ?? useGoProStore.getState().connectedDeviceId;
     const conn = targetId ? this.connections.get(targetId) : undefined;
     const isBooting = conn ? conn.isBooting : false;
-    return buildCapabilityCacheKey(cameraState, isBooting);
+    return getCapabilityCacheKeyHelper(cameraState, isBooting);
   }
 
   private async fetchCapabilitiesByIds(
@@ -848,29 +843,33 @@ class GoProBLEManager {
       return;
     }
 
-    if (!bypassCapabilityCache && cameraState.capabilityCache[cacheKey]) {
+    const cacheEval = evaluateCapabilityCacheHitHelper(
+      uniqueIds,
+      cacheKey,
+      cameraState.capabilityCache,
+      bypassCapabilityCache,
+    );
+
+    if (cacheEval.hitIds.length > 0) {
       const cached = cameraState.capabilityCache[cacheKey];
-      const hitIds = uniqueIds.filter((id) => id in cached);
-      const missingIds = uniqueIds.filter((id) => !(id in cached));
+      store.batchUpdateCapabilitiesForDevice(
+        targetId,
+        cacheEval.hitIds.map((id) => ({ id, values: cached[id] })),
+      );
+    }
 
-      if (hitIds.length > 0) {
-        store.batchUpdateCapabilitiesForDevice(
-          targetId,
-          hitIds.map((id) => ({ id, values: cached[id] })),
-        );
-      }
+    if (cacheEval.isFullHit) {
+      debugLog('bleCache', `[BLE Cache] FULL HIT! Key: ${cacheKey}`);
+      return;
+    }
 
-      if (missingIds.length === 0) {
-        debugLog('bleCache', `[BLE Cache] FULL HIT! Key: ${cacheKey}`);
-        return;
-      }
-
+    if (cacheEval.hitIds.length > 0) {
       debugLog(
         'bleCache',
-        `[BLE Cache] PARTIAL MISS! Key: ${cacheKey}. Missing: ${missingIds.length} capabilities. IDs: ${missingIds.join(',')}`,
+        `[BLE Cache] PARTIAL MISS! Key: ${cacheKey}. Missing: ${cacheEval.missingIds.length} capabilities. IDs: ${cacheEval.missingIds.join(',')}`,
       );
-      uniqueIds = missingIds;
-    } else if (!bypassCapabilityCache && cacheKey) {
+      uniqueIds = cacheEval.missingIds;
+    } else if (!bypassCapabilityCache) {
       debugLog(
         'bleCache',
         `[BLE Cache] FULL MISS! Key: ${cacheKey}. Fetching ${uniqueIds.length} capabilities. IDs: ${uniqueIds.join(',')}`,
