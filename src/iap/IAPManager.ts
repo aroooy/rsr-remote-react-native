@@ -53,7 +53,7 @@ import { debugLog, debugWarn, debugError } from '../utils/debugLogging';
 // We try to require react-native-iap at runtime. If it's not installed
 // or we're running in Expo Go, rniap will be null and all store calls
 // are no-ops.
-let rniap: any = null;
+let rniap: Record<string, Function> | null = null;
 try {
   rniap = require('react-native-iap');
 } catch {
@@ -100,7 +100,8 @@ export const initIAP = async (onPurchaseSuccess: OnPurchaseSuccess): Promise<voi
     // NOTE on Android: finishTransaction({ isConsumable: false }) calls
     // acknowledgePurchase under the hood. Google Play auto-refunds any
     // purchase that is not acknowledged within 3 days, so this MUST run.
-    purchaseUpdateSubscription = rniap.purchaseUpdatedListener(async (purchase: any) => {
+    purchaseUpdateSubscription = rniap.purchaseUpdatedListener(
+      async (purchase: { productId?: string; purchaseToken?: string; purchaseState?: string }) => {
       debugLog('iap', '[IAP][listener] purchaseUpdated fired, keys =', Object.keys(purchase ?? {}));
       debugLog(
         'iap',
@@ -140,7 +141,7 @@ export const initIAP = async (onPurchaseSuccess: OnPurchaseSuccess): Promise<voi
       }
     });
 
-    purchaseErrorSubscription = rniap.purchaseErrorListener((error: any) => {
+    purchaseErrorSubscription = rniap.purchaseErrorListener((error: { code?: string }) => {
       if (error.code !== 'E_USER_CANCELLED') {
         debugWarn('iap', '[IAP] Purchase error', error);
       }
@@ -188,12 +189,13 @@ export const purchaseProduct = (productId: IAPProductId): void => {
             },
             type: 'in-app',
           });
-        } catch (e: any) {
+        } catch (e: unknown) {
+          const err = e as { code?: string; message?: string };
           const isAlreadyOwned =
-            e.code === 'E_ALREADY_OWNED' ||
-            (e.message &&
-              (e.message.toLowerCase().includes('already owned') ||
-                e.message.toLowerCase().includes('alreadyowned')));
+            err.code === 'E_ALREADY_OWNED' ||
+            (err.message &&
+              (err.message.toLowerCase().includes('already owned') ||
+                err.message.toLowerCase().includes('alreadyowned')));
           if (isAlreadyOwned) {
             try {
               debugLog('iap', '[IAP] Item already owned, triggering auto-restore');
@@ -204,14 +206,14 @@ export const purchaseProduct = (productId: IAPProductId): void => {
                   t('alert.restoredDesc', { count: restored.length }),
                 );
               } else {
-                Alert.alert(t('iap.purchaseFailed'), e.message ?? t('iap.unknownError'));
+                Alert.alert(t('iap.purchaseFailed'), err.message ?? t('iap.unknownError'));
               }
-            } catch (restoreErr: any) {
+            } catch (restoreErr: unknown) {
               debugError('iap', '[IAP] Auto-restore on already owned item failed', restoreErr);
-              Alert.alert(t('iap.purchaseFailed'), e.message ?? t('iap.unknownError'));
+              Alert.alert(t('iap.purchaseFailed'), err.message ?? t('iap.unknownError'));
             }
-          } else if (e.code !== 'E_USER_CANCELLED') {
-            Alert.alert(t('iap.purchaseFailed'), e.message ?? t('iap.unknownError'));
+          } else if (err.code !== 'E_USER_CANCELLED') {
+            Alert.alert(t('iap.purchaseFailed'), err.message ?? t('iap.unknownError'));
           }
         }
       },
@@ -280,9 +282,10 @@ export const restorePurchases = async (): Promise<string[]> => {
 
   try {
     return await restorePurchasesCore();
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const err = e as { message?: string };
     debugError('iap', '[IAP][restore] failed', e);
-    Alert.alert(t('iap.restoreFailed'), e.message ?? t('iap.unknownError'));
+    Alert.alert(t('iap.restoreFailed'), err.message ?? t('iap.unknownError'));
     return [];
   }
 };

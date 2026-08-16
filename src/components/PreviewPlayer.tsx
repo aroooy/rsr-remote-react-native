@@ -180,7 +180,7 @@ export const PreviewPlayer: React.FC<Props> = ({ visible, onClose }) => {
                   '--drop-late-frames',
                   '--skip-frames',
                 ],
-              } as any)}
+              } as Record<string, unknown>)}
             />
           </View>
         )}

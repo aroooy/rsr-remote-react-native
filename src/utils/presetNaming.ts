@@ -31,6 +31,9 @@ import { getPresetLabelFromIconId } from '../constants/PresetIconMap';
 import { isHero12Or13Model } from '../cameraModels/shared/modelNoHelpers';
 import { resolveModelNoFromCameraModelKey } from '../cameraModels/shared/modelNumber';
 
+import type { GoProPresetGroupData, GoProPreset } from '../ble/PresetProtobuf';
+import type { CameraModelKey } from '../cameraModels/shared/modelManifest';
+
 const HLG_HDR_PROFILE_VALUES = new Set<number>([1, 101, 200]);
 const ATTACHMENT_VALUES_TO_SKIP = new Set<number>([0, 10, 100]);
 const PHOTO_OUTPUT_STANDARD_VALUE = 0;
@@ -50,10 +53,10 @@ const HYPERSMOOTH_AUTO_BOOST_VALUE = 4;
 export const generateDefaultPresetName = (
   settings: Record<number, number | undefined>,
   cameraModel: string,
-  presetsList: any[] = [], // GoProPresetGroupData[]
+  presetsList: GoProPresetGroupData[] = [],
   firmwareVersion: string | null = null,
 ): string => {
-  const modelKey = cameraModel as any; // Cast to CameraModelKey for GoProMetadata queries
+  const modelKey = cameraModel as CameraModelKey;
   const modelNo = resolveModelNoFromCameraModelKey(modelKey);
   const supportsPresetRename = isHero12Or13Model(modelNo);
 
@@ -69,7 +72,7 @@ export const generateDefaultPresetName = (
 
     // Look up in presetsList
     for (const group of presetsList) {
-      const p = group.presets?.find((item: any) => item.id === presetId);
+      const p = group.presets?.find((item: GoProPreset) => item.id === presetId);
       if (p) {
         customName = p.customName;
         iconId = p.iconId;

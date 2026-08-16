@@ -302,23 +302,23 @@ function init() {
 // Public exports — lazy getters via Proxy
 // ---------------------------------------------------------------------------
 
-function createLazyArray<T extends readonly any[]>(getter: () => T): T {
+function createLazyArray<T extends readonly unknown[]>(getter: () => T): T {
   return new Proxy([] as unknown as T, {
     get(_, prop) {
       init();
       const target = getter();
-      const value = (target as any)[prop];
-      return typeof value === 'function' ? value.bind(target) : value;
+      const value = (target as Record<string | symbol, unknown>)[prop];
+      return typeof value === 'function' ? (value as Function).bind(target) : value;
     },
   });
 }
 
-function createLazyRecord<T extends Record<string, any>>(getter: () => T): T {
+function createLazyRecord<T extends Record<string, unknown>>(getter: () => T): T {
   return new Proxy({} as T, {
     get(_, prop) {
       init();
       const target = getter();
-      return (target as any)[prop];
+      return (target as Record<string | symbol, unknown>)[prop];
     },
     ownKeys() {
       init();

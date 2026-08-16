@@ -24,6 +24,7 @@ import {
   BleManager,
   Device,
   BleError,
+  Characteristic,
   Subscription,
   State as BleAdapterNativeState,
 } from 'react-native-ble-plx';
@@ -526,8 +527,9 @@ class GoProBLEManager {
     });
   }
 
-  private isCancellationError(error: any, deviceId?: string) {
-    const message = String(error?.message || error || '').toLowerCase();
+  private isCancellationError(error: unknown, deviceId?: string) {
+    const err = error as { message?: string } | null | undefined;
+    const message = String(err?.message || error || '').toLowerCase();
     return (
       message.includes('operation was cancelled') ||
       message.includes('cancelled') ||
@@ -535,8 +537,9 @@ class GoProBLEManager {
     );
   }
 
-  private isManagerDestroyedError(error: any) {
-    const message = String(error?.message || error || '').toLowerCase();
+  private isManagerDestroyedError(error: unknown) {
+    const err = error as { message?: string } | null | undefined;
+    const message = String(err?.message || error || '').toLowerCase();
     return message.includes('ble manager was destroyed');
   }
 
@@ -956,13 +959,13 @@ class GoProBLEManager {
         connected = await this.connectWithRetry(device, 2);
         return await this.completeConnectionSetup(device, connected, 1500);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (this.isManagerDestroyedError(e)) {
         this.recreateManager();
       }
       if (!this.isCancellationError(e, device.id)) {
         debugError('ble', 'Connection failed:', e);
-        this.ui.alert(t('ble.connectionError'), e?.message || String(e));
+        this.ui.alert(t('ble.connectionError'), (e as Error)?.message || String(e));
       }
       this.clearConnectionResources(device.id);
       store.beginDisconnectForDevice(device.id);
@@ -1019,11 +1022,11 @@ class GoProBLEManager {
         base64Str,
       );
       return true;
-    } catch (e: any) {
+    } catch (e: unknown) {
       // Power-off command failed → the camera stays connected, so clear the mark.
       this.intentionalDisconnectIds.delete(targetId);
       debugWarn('ble', 'powerOffCamera failed', e);
-      this.ui.alert(t('ble.powerOffError'), e?.message || String(e));
+      this.ui.alert(t('ble.powerOffError'), (e as Error)?.message || String(e));
       return false;
     }
   }
@@ -1229,7 +1232,7 @@ class GoProBLEManager {
     const deviceId = conn.deviceId;
 
     // Handler for 0077 (QUERY_NOTIFY)
-    const queryNotifyHandler = (error: BleError | null, characteristic: any) => {
+    const queryNotifyHandler = (error: BleError | null, characteristic: Characteristic | null) => {
       if (error) {
         debugWarn('ble', 'Query Notify error:', error);
         return;
@@ -1424,7 +1427,7 @@ class GoProBLEManager {
     };
 
     // Handler for 0075 (SETTINGS_NOTIFY) and 0073 (CMD_NOTIFY)
-    const cmdNotifyHandler = (error: BleError | null, characteristic: any) => {
+    const cmdNotifyHandler = (error: BleError | null, characteristic: Characteristic | null) => {
       if (error) return;
       if (!characteristic?.value) return;
       const bytes = Array.from(Buffer.from(characteristic.value, 'base64'));
@@ -1453,7 +1456,7 @@ class GoProBLEManager {
       }
     };
 
-    const simpleNotifyHandler = (error: BleError | null, characteristic: any) => {
+    const simpleNotifyHandler = (error: BleError | null, characteristic: Characteristic | null) => {
       if (error) return;
       if (!characteristic?.value) return;
       const bytes = Array.from(Buffer.from(characteristic.value, 'base64'));
@@ -2402,7 +2405,7 @@ class GoProBLEManager {
           keepAliveBase64,
         );
         conn.keepAliveFailureCount = 0;
-      } catch (e) {
+      } catch (e: unknown) {
         conn.keepAliveFailureCount += 1;
         debugWarn(
           'ble',
@@ -2442,7 +2445,7 @@ class GoProBLEManager {
       );
       conn.keepAliveFailureCount = 0;
       return true;
-    } catch (e) {
+    } catch (e: unknown) {
       debugWarn('ble', '[BLE] checkConnectionHealth failed', e);
       this.handleDisconnectedToTop(targetId);
       return false;

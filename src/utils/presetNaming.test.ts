@@ -24,11 +24,14 @@ import { describe, it, expect, vi } from 'vitest';
 import { GoProSettingId } from '../constants/GoProSettingId';
 import { GoProPresetGroup } from '../constants/GoProPresetGroup';
 import { generateDefaultPresetName } from './presetNaming';
+import type { CameraModelKey } from '../cameraModels/shared/modelManifest';
 
 // Mock the i18n module to prevent loading expo-localization which crashes Node test environment
 vi.mock('../i18n', () => ({
   t: (key: string) => `[translation:${key}]`,
 }));
+
+import type { SettingValueLabelContext } from '../constants/GoProMetadata';
 
 describe('generateDefaultPresetName', () => {
   it('generates standard video name correctly', () => {
@@ -152,9 +155,9 @@ describe('generateDefaultPresetName', () => {
         getSettingValueNameForModelWithContext: (
           id: number,
           value: number,
-          model: any,
-          context: any,
-          firmwareVersion: any,
+          model: CameraModelKey,
+          context: SettingValueLabelContext,
+          firmwareVersion: string | null,
         ) => {
           if (id === GoProSettingId.LENS_ATTACHMENT && value === 10) return '標準レンズ';
           if (id === GoProSettingId.HYPERSMOOTH && value === 0) return 'オフ';

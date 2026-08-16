@@ -187,7 +187,7 @@ export const PresetRenameModal: React.FC<PresetRenameModalProps> = ({ state, col
                             accessibilityLabel={choice.label}
                           >
                             <Ionicons
-                              name={choice.ionicon as any}
+                              name={choice.ionicon as keyof typeof Ionicons.glyphMap}
                               size={22}
                               color={isSelected ? colors.accent : colors.textSecondary}
                             />

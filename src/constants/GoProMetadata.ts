@@ -37,6 +37,7 @@ import {
   PRESET_NAME_OVERRIDES,
 } from './metadataOverrides';
 import { resolveModelNoFromCameraModelKey } from '../cameraModels/shared/modelNumber';
+import type { CameraModelKey } from '../cameraModels/shared/modelManifest';
 import { GOPRO_MODEL_NUMBERS, type GoProModelNumber } from './GoProModelNumbers';
 import { isMaxModel } from '../cameraModels/shared/modelNoHelpers';
 import { t } from '../i18n';
@@ -197,9 +198,9 @@ export const getSettingValueName = (id: number, value: number): string => {
   return GOPRO_SETTINGS_METADATA[id]?.values[value] || `Val: ${value}`;
 };
 
-type SettingValueLabelContext = {
+export interface SettingValueLabelContext {
   settings?: Record<number, number | undefined>;
-};
+}
 
 type ContextualSettingValueNameResolver = (
   value: number,
@@ -361,7 +362,7 @@ export const getBoolValues = (
   const baseOn = meta?.boolOnValue ?? 1;
   const baseOff = meta?.boolOffValue ?? 0;
   if (modelKey) {
-    const modelNo = resolveModelNoFromCameraModelKey(modelKey as any);
+    const modelNo = resolveModelNoFromCameraModelKey(modelKey as CameraModelKey);
     const modelOverride = modelNo !== null ? GOPRO_BOOL_VALUES_MODEL_OVERRIDE[modelNo] : undefined;
     const override = modelOverride?.[settingId];
     if (override) {
@@ -381,7 +382,7 @@ export const getOrderedSettingValues = (
   modelKey?: string | null,
   firmwareVersion?: string | null,
 ): number[] => {
-  const modelNo = modelKey ? resolveModelNoFromCameraModelKey(modelKey as any) : null;
+  const modelNo = modelKey ? resolveModelNoFromCameraModelKey(modelKey as CameraModelKey) : null;
   const settingId = resolveSemanticSettingId(rawSettingId, modelKey, modelNo);
   const overlay = getActiveFirmwareOverlay(settingId, modelKey, firmwareVersion);
 

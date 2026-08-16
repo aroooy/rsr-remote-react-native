@@ -22,7 +22,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Animated, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import { Animated, StyleSheet, Text, View, ActivityIndicator, StyleProp, ViewStyle } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useGoProStore, useCameraState } from '../store/GoProStore';
 import {
@@ -39,7 +39,7 @@ import { getThemeColors } from '../constants/Theme';
 export const CameraStatusBar: React.FC<{
   deviceId?: string;
   variant?: 'header' | 'card';
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }> = ({ deviceId, variant = 'header', style }) => {
   const { t } = useTranslation();
   const theme = useGoProStore((s) => s.theme);

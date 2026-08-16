@@ -226,10 +226,11 @@ class GoProWiFiManager {
         return true;
       }
       return false;
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const err = e as { name?: string; message?: string };
       // Demote expected fetch failures (e.g. from network already being disconnected) to warnings
-      if (e.name === 'AbortError' || e.message?.includes('Network request failed')) {
-        debugWarn('wifi', `[WiFi] Ignored error stopping stream: ${e.message}`);
+      if (err.name === 'AbortError' || err.message?.includes('Network request failed')) {
+        debugWarn('wifi', `[WiFi] Ignored error stopping stream: ${err.message}`);
       } else {
         debugError('wifi', '[WiFi] Error stopping stream:', e);
       }

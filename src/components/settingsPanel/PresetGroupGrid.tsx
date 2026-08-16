@@ -208,7 +208,7 @@ export const PresetGroupGrid: React.FC<PresetGroupGridProps> = ({
                       },
                     ]}
                   >
-                    <Ionicons name={iconName as any} size={14} color={presetIconColor} />
+                    <Ionicons name={iconName as keyof typeof Ionicons.glyphMap} size={14} color={presetIconColor} />
                   </View>
                   <Text
                     style={[
@@ -292,7 +292,7 @@ export const PresetGroupGrid: React.FC<PresetGroupGridProps> = ({
                       },
                     ]}
                   >
-                    <Ionicons name={iconName as any} size={14} color={presetIconColor} />
+                    <Ionicons name={iconName as keyof typeof Ionicons.glyphMap} size={14} color={presetIconColor} />
                   </View>
                   <Text
                     style={[
