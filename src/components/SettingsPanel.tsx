@@ -58,6 +58,12 @@ import {
   dedupeEquivalentSettingValues,
 } from '../constants/GoProMetadata';
 import { SliderSettingRow } from './SliderSettingRow';
+import { ResolutionFramingSection } from './settingsPanel/ResolutionFramingSection';
+import {
+  renderGridItemsHelper,
+  renderLockedRowHelper,
+} from './settingsPanel/SettingsSectionGroup';
+import { ShutterButtonRow } from './settingsPanel/ShutterButtonRow';
 import { GoProSettingId } from '../constants/GoProSettingId';
 import { GoProPresetGroup, GoProPresetGroupSelectId } from '../constants/GoProPresetGroup';
 import { CAMERA_ADVANCED_SETTING_IDS, DASHBOARD_SUB_SETTING_IDS } from '../constants/capabilityDependencies';
@@ -85,14 +91,10 @@ import { goProBle } from '../ble/GoProBLEManager';
 import { debugWarn } from '../utils/debugLogging';
 import { PreviewPlayer } from './PreviewPlayer';
 import { Ionicons } from '@expo/vector-icons';
-import { AspectRatioIcon } from './AspectRatioIcon';
 import { getPresetIoniconName } from '../constants/PresetIconMap';
-import { getResolutionLabel } from '../constants/ResolutionAspectMap';
-import { resolveFramingSelector } from './settingsPanel/framingSelector';
 import { resolveCurrentGroupPresets } from './settingsPanel/currentGroupPresets';
 import { isForcedQuickSettingVisible } from './settingsPanel/forcedQuickVisibility';
 import { filterPrimaryItemValues } from './settingsPanel/primaryItemValues';
-import { resolveResolutionSelector } from './settingsPanel/resolutionSelector';
 import { resolveSpecialRows } from './settingsPanel/specialRows';
 import { filterSelectableValues } from './settingsPanel/selectableValues';
 import { resolveBaseDisplayPresetId } from '../cameraModels/shared/displayPreset';
@@ -514,121 +516,7 @@ export const SettingsPanel = () => {
     modalState: renameModalState,
   } = usePresetRename({ presets, currentModelNo, currentPresetId, cameraModel });
 
-  const renderFramingSelector = () => {
-    const framingOptions = resolveFramingSelector({
-      settings: displaySettings,
-      capabilities,
-      cameraModel,
-      currentGroupId,
-      currentPresetId: displayPresetId,
-      isTimelapseContextActive,
-      isHero13BurstSloMoActive,
-      isHero12MaxVideo2Preset,
-      isHero12MaxTimewarp2Preset,
-      isHero12Trail2Preset,
-    });
 
-    if (framingOptions === null || framingOptions.length === 0) {
-      return null;
-    }
-
-    return (
-      <View style={styles.framingRow}>
-        {framingOptions.map((option) => {
-          const iconColor = option.isActive ? colors.accent : colors.textSecondary;
-          return (
-            <TouchableOpacity
-              key={option.key}
-              disabled={!option.isAvailable}
-              style={[
-                styles.framingButton,
-                option.isActive && styles.framingButtonActive,
-                option.isActive
-                  ? { backgroundColor: colors.accentLight, borderColor: colors.accent }
-                  : { borderColor: colors.toggleBorder, backgroundColor: colors.toggleBg },
-                !option.isAvailable && { opacity: 0.3 },
-              ]}
-              onPress={() => {
-                if (option.isActive || !option.isAvailable || option.targetValue === null) return;
-                handleChangeValue(option.settingId, option.targetValue);
-              }}
-            >
-              <AspectRatioIcon ratio={option.ratio} size={18} color={iconColor} />
-              <Text
-                style={[
-                  styles.framingButtonText,
-                  option.isActive && styles.framingButtonTextActive,
-                  { color: iconColor, marginLeft: 6 },
-                ]}
-              >
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    );
-  };
-
-  const renderResolutionSelector = () => {
-    const resolutionSelectorState = resolveResolutionSelector({
-      resolutionValues: getFilteredSelectableValues(GoProSettingId.RESOLUTION),
-      settings: displaySettings,
-      pendingSettings: pendingDisplaySettings,
-      capabilities,
-      cameraModel,
-      currentGroupId,
-      currentPresetId: displayPresetId,
-      quickSettingIds: displayLayout.quickSettingIds,
-      isHero13BurstSloMoActive,
-      hasHero12EasyPresetConfig: hero12EasyPresetConfig !== undefined,
-    });
-    if (resolutionSelectorState === null) return null;
-
-    const { currentValue, resolutionValues } = resolutionSelectorState;
-
-    return (
-      <View style={[styles.primaryItemContainer, { borderBottomColor: colors.border }]}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.toggleGroup}>
-          <View style={styles.toggleLabelChip} pointerEvents="none">
-            <Text style={[styles.toggleLabelChipText, { color: colors.textMuted }]}>
-              {getSettingName(GoProSettingId.RESOLUTION)}
-            </Text>
-          </View>
-          {resolutionValues.map((val) => {
-            const isSelected = currentValue === val;
-            const label = getResolutionLabel(cameraModel, val) ?? val.toString();
-            return (
-              <TouchableOpacity
-                key={val}
-                style={[
-                  styles.toggleButton,
-                  isSelected && styles.toggleButtonSelected,
-                  isSelected
-                    ? {
-                        backgroundColor: colors.toggleSelectedBg,
-                        borderColor: colors.toggleSelectedBg,
-                      }
-                    : { borderColor: colors.toggleBorder, backgroundColor: colors.toggleBg },
-                ]}
-                onPress={() => handleChangeValue(GoProSettingId.RESOLUTION, val)}
-              >
-                <Text
-                  style={[
-                    styles.toggleText,
-                    isSelected && styles.toggleTextSelected,
-                    !isSelected && { color: colors.textSecondary },
-                  ]}
-                >
-                  {label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
-    );
-  };
 
   // Force PHOTO_OUTPUT display (RAW/Standard) during Timelapse/Nightlapse Photo format.
   // Acts as a fallback UI because some camera models return empty capabilities.
@@ -957,59 +845,12 @@ export const SettingsPanel = () => {
     }
   };
 
-  // Grid rendering: Display setting items in columnCount columns
-  const renderGridItems = (keys: number[], renderer: (id: number) => React.ReactNode) => {
-    if (columnCount <= 1) {
-      return keys.map(renderer);
-    }
-    const rows: number[][] = [];
-    for (let i = 0; i < keys.length; i += columnCount) {
-      rows.push(keys.slice(i, i + columnCount));
-    }
-    return rows.map((row, rowIdx) => (
-      <View key={rowIdx} style={styles.gridRow}>
-        {row.map((id) => (
-          <View key={id} style={{ flex: 1 }}>
-            {renderer(id)}
-          </View>
-        ))}
-        {/* Fill empty cells in the final row to maintain uniform width */}
-        {row.length < columnCount &&
-          Array.from({ length: columnCount - row.length }, (_, i) => (
-            <View key={`pad-${i}`} style={{ flex: 1 }} />
-          ))}
-      </View>
-    ));
-  };
+  // Grid rendering & Locked row delegation
+  const renderGridItems = (keys: number[], renderer: (id: number) => React.ReactNode) =>
+    renderGridItemsHelper(keys, columnCount, renderer, styles.gridRow);
 
-  const renderLockedRow = () => (
-    <TouchableOpacity
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 20,
-        paddingHorizontal: 16,
-        backgroundColor: colors.lockedBg,
-        borderRadius: 10,
-        marginTop: 4,
-      }}
-      onPress={() => {
-        if (currentProductId) {
-          purchaseProduct(currentProductId as IAPProductId);
-        }
-      }}
-    >
-      <Text style={{ fontSize: 24, marginRight: 8 }}>🔒</Text>
-      <Text style={{ color: colors.lockedText, fontSize: 14, fontWeight: '600' }}>
-        {currentProductId
-          ? t('control.upgradeToUnlock', {
-              product: getProductDisplayName(currentProductId as IAPProductId),
-            })
-          : t('control.connectToUnlock')}
-      </Text>
-    </TouchableOpacity>
-  );
+  const renderLockedRow = () =>
+    renderLockedRowHelper(colors, currentProductId, t, getProductDisplayName, purchaseProduct);
 
   const renderMaxLensModeSelectors = () => {
     if (!isMaxModel(currentModelNo)) return null;
@@ -1056,10 +897,28 @@ export const SettingsPanel = () => {
         />
         {/* Media Format toggle (Timelapse/Nightlapse only) — Always visible right below preset chips, except on HeroMini11 */}
         {showMediaFormatPrimary && renderPrimaryItem(GoProSettingId.MEDIA_FORMAT)}
-        {/* Framing (Aspect Ratio) — Always visible in all modes */}
-        {showFramingSelector && renderFramingSelector()}
-        {/* Resolution — Always visible */}
-        {showResolutionSelector && renderResolutionSelector()}
+        {/* Framing & Resolution Selectors */}
+        <ResolutionFramingSection
+          showFramingSelector={showFramingSelector}
+          showResolutionSelector={showResolutionSelector}
+          displaySettings={displaySettings}
+          pendingDisplaySettings={pendingDisplaySettings}
+          capabilities={capabilities}
+          cameraModel={cameraModel}
+          currentGroupId={currentGroupId}
+          displayPresetId={displayPresetId}
+          isTimelapseContextActive={isTimelapseContextActive}
+          isHero13BurstSloMoActive={isHero13BurstSloMoActive}
+          isHero12MaxVideo2Preset={isHero12MaxVideo2Preset}
+          isHero12MaxTimewarp2Preset={isHero12MaxTimewarp2Preset}
+          isHero12Trail2Preset={isHero12Trail2Preset}
+          quickSettingIds={displayLayout.quickSettingIds}
+          hero12EasyPresetConfig={hero12EasyPresetConfig}
+          getFilteredSelectableValues={getFilteredSelectableValues}
+          onChangeValue={handleChangeValue}
+          colors={colors}
+          styles={styles}
+        />
       </View>
 
       {/* Primary items (Toggle Buttons) — Fixed outside ScrollView */}
@@ -1220,86 +1079,21 @@ export const SettingsPanel = () => {
         </TouchableOpacity>
       )}
 
-      {/* Shutter Button (Fixed at the very bottom of the screen)
-           The elapsed time display has been moved next to the recording dot on the far right of CameraStatusBar.
-           A pseudo-gradient band is placed at the top edge to softly mark the boundary with the scroll area
-           (maintaining flatness while avoiding abrupt transitions). */}
-      <View style={styles.shutterFade} pointerEvents="none">
-        {[0, 0.12, 0.25, 0.4, 0.55, 0.7, 0.85].map((op, i) => (
-          <View
-            key={i}
-            style={{ height: 2, backgroundColor: colors.surfaceSecondary, opacity: op }}
-          />
-        ))}
-      </View>
-      <View style={[styles.shutterContainer, { backgroundColor: colors.surfaceSecondary }]}>
-        {/* Left spacer to keep shutter button centered */}
-        <View style={styles.shutterSideContainer} />
-
-        <View style={styles.shutterCenterContainer}>
-          <TouchableOpacity
-            style={[
-              styles.shutterButton,
-              { borderColor: captureDelayActive ? colors.warning : colors.shutterRing },
-            ]}
-            onPress={() => {
-              haptics.impact();
-              goProBle.toggleShutter(!isEncoding);
-            }}
-            accessibilityLabel={isEncoding ? t('control.stop') : t('control.shutter')}
-            accessibilityRole="button"
-          >
-            {captureCountdown !== null ? (
-              <Text style={styles.shutterCountdownText}>{captureCountdown}</Text>
-            ) : (
-              <Animated.View
-                style={[
-                  isEncoding ? styles.shutterInnerRecording : styles.shutterInnerIdle,
-                  {
-                    backgroundColor: isEncoding
-                      ? colors.shutterInnerRecording
-                      : colors.shutterInnerIdle,
-                  },
-                  isEncoding && { opacity: shutterPulse },
-                ]}
-              />
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Right HindSight Info panel */}
-        <View style={styles.shutterSideContainer}>
-          {hindsightActive && !isMaxModel(currentModelNo) && (
-            <View style={styles.hindsightContainer}>
-              <View
-                style={[
-                  styles.hindsightBadge,
-                  {
-                    backgroundColor: colors.accentLight,
-                    borderColor: colors.accent,
-                  },
-                ]}
-              >
-                <Text style={[styles.hindsightBadgeText, { color: colors.accent }]}>
-                  {settings[GoProSettingId.HINDSIGHT] === 2
-                    ? '+15s'
-                    : settings[GoProSettingId.HINDSIGHT] === 3
-                      ? '+30s'
-                      : ''}
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={[styles.stopHindsightButton, { backgroundColor: colors.accent }]}
-                onPress={() => handleChangeValue(GoProSettingId.HINDSIGHT, 4)}
-                accessibilityLabel={t('control.stopHindsight')}
-                accessibilityRole="button"
-              >
-                <Text style={styles.stopHindsightText}>{t('control.stopHindsight')}</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      </View>
+      {/* Shutter Button (Fixed at the very bottom of the screen) */}
+      <ShutterButtonRow
+        colors={colors}
+        styles={styles}
+        captureDelayActive={captureDelayActive}
+        captureCountdown={captureCountdown}
+        isEncoding={isEncoding}
+        shutterPulse={shutterPulse}
+        hindsightActive={hindsightActive}
+        currentModelNo={currentModelNo}
+        settings={settings}
+        t={t}
+        onToggleShutter={() => goProBle.toggleShutter(!isEncoding)}
+        onChangeValue={handleChangeValue}
+      />
 
       {/* Value Selection Modal */}
       <SettingOptionModal
