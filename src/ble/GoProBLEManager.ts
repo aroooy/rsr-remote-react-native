@@ -78,8 +78,6 @@ import { selectIsShortTermBusy, CommandCategory } from '../store/GoProSelectors'
 import {
   encodeRequestGetPresetStatus,
   encodeRequestCustomPresetUpdate,
-  decodeNotifyPresetStatus,
-  decodeResponseGeneric,
   GoProPresetGroupData,
   PRESET_TITLE_USER_DEFINED_CUSTOM_NAME,
   RESULT_SUCCESS,
@@ -111,7 +109,7 @@ import {
   resolveOutgoingBleSettingId,
   INCOMING_SETTING_SYNC_RULES,
 } from '../constants/settingIdAliases';
-import { buildGoProPacketChunks, parseHardwareInfo } from './GoProPacketCodec';
+import { buildGoProPacketChunks } from './GoProPacketCodec';
 import {
   buildShutterPacket,
   buildLoadPresetPacket,
@@ -128,6 +126,15 @@ import {
   buildCustomPresetUpdatePacket,
 } from './bleCommandPackets';
 import { buildCapabilityCacheKey } from './capabilityCacheKey';
+import {
+  isPresetStatusPacket,
+  parsePresetStatusPacket,
+  isHardwareInfoPacket,
+  parseHardwareInfoPacket,
+  isCustomPresetUpdatePacketResponse,
+  parseCustomPresetUpdatePacketResponse,
+  parseSettingWriteResponse,
+} from './bleResponseCodec';
 import * as CapabilityPlanning from './capabilityPlanning';
 
 type GoProConnectionTarget = {
@@ -1232,35 +1239,29 @@ class GoProBLEManager {
         const packet = conn.queryParser.parse(bytes);
         if (packet.isComplete) {
           const data = packet.data;
-          // Protobuf feature response: [feature_id=0xF5, action_id=request|0x80, ...protobuf]
-          // RequestGetPresetStatus: request=[0xF5, 0x72, ...], response=[0xF5, 0xF2, ...protobuf]
-          // Note: no error code byte — protobuf payload starts immediately at index 2
-          if (data.length >= 2 && data[0] === 0xf5) {
-            if (data[1] === 0xf2 || data[1] === 0xf3) {
-              // 0xF2 = GetPresetStatus sync response  (0x72 | 0x80)
-              // 0xF3 = NotifyPresetStatus async push   (0x73 | 0x80)
-              const presetBytes = data.slice(2);
-              const groups = decodeNotifyPresetStatus(presetBytes);
-              if (data[1] === 0xf2 && conn.pendingPresetResolver) {
-                conn.pendingPresetResolver(groups);
-                conn.pendingPresetResolver = null;
-              }
-              useGoProStore.getState().setPresets(groups, deviceId);
-              // Save to persistent cache (save the latest presets after merge to prevent missing iconId)
-              const store = useGoProStore.getState();
-              const cameraState = store.cameraStates[deviceId] || createDefaultCameraState();
-              const mergedPresets = cameraState.presets;
-              const currentModelNo = cameraState.hardwareInfo?.modelNo ?? null;
-              if (deviceId && mergedPresets.length > 0) {
-                void savePresetMetaCache(deviceId, mergedPresets, {
-                  allowCustomNames: isHero12Or13Model(currentModelNo),
-                }).catch((e) => {
-                  debugWarn('blePreset', '[BLE] savePresetMetaCache failed', e);
-                });
-              }
-              // Camera push-notified the current preset, so clear the pending state
-              store.clearPendingSettingForDevice(deviceId, GoProSettingId.MODE_PRESET);
+          const presetStatus = parsePresetStatusPacket(data);
+          if (presetStatus) {
+            const { groups, isSyncResponse } = presetStatus;
+            if (isSyncResponse && conn.pendingPresetResolver) {
+              conn.pendingPresetResolver(groups);
+              conn.pendingPresetResolver = null;
             }
+            useGoProStore.getState().setPresets(groups, deviceId);
+            // Save to persistent cache (save the latest presets after merge to prevent missing iconId)
+            const store = useGoProStore.getState();
+            const cameraState = store.cameraStates[deviceId] || createDefaultCameraState();
+            const mergedPresets = cameraState.presets;
+            const currentModelNo = cameraState.hardwareInfo?.modelNo ?? null;
+            if (deviceId && mergedPresets.length > 0) {
+              void savePresetMetaCache(deviceId, mergedPresets, {
+                allowCustomNames: isHero12Or13Model(currentModelNo),
+              }).catch((e) => {
+                debugWarn('blePreset', '[BLE] savePresetMetaCache failed', e);
+              });
+            }
+            // Camera push-notified the current preset, so clear the pending state
+            store.clearPendingSettingForDevice(deviceId, GoProSettingId.MODE_PRESET);
+          } else if (data.length >= 2 && data[0] === 0xf5) {
             // Ignore other 0xF5 feature responses (do not issue warnings)
           } else {
             const response = processQueryResponse(data, deviceId);
@@ -1430,19 +1431,19 @@ class GoProBLEManager {
       const packet = conn.cmdParser.parse(bytes);
       if (!packet.isComplete) return;
       const data = packet.data;
-      // Hardware Info response: [0x3C, 0x00(success), ...LV fields]
-      if (data.length >= 2 && data[0] === 0x3c && data[1] === 0x00) {
-        const hwInfo = parseHardwareInfo(data);
-        if (hwInfo && conn.pendingHardwareInfoResolver) {
+
+      const hwInfo = parseHardwareInfoPacket(data);
+      if (hwInfo) {
+        if (conn.pendingHardwareInfoResolver) {
           conn.pendingHardwareInfoResolver(hwInfo);
           conn.pendingHardwareInfoResolver = null;
         }
         return;
       }
-      // RequestCustomPresetUpdate response: [0xF1, 0xE4, ...protobuf ResponseGeneric]
-      // Protobuf commands (Feature 0xF1 series) are transmitted and received on the Command channel.
-      if (data.length >= 2 && data[0] === 0xf1 && data[1] === 0xe4) {
-        const { result } = decodeResponseGeneric(data.slice(2));
+
+      const presetUpdate = parseCustomPresetUpdatePacketResponse(data);
+      if (presetUpdate) {
+        const { result } = presetUpdate;
         debugLog('ble', '[BLE] CustomPresetUpdate response result =', result);
         if (conn.pendingPresetUpdateResolver) {
           conn.pendingPresetUpdateResolver(result);
@@ -1456,14 +1457,10 @@ class GoProBLEManager {
       if (error) return;
       if (!characteristic?.value) return;
       const bytes = Array.from(Buffer.from(characteristic.value, 'base64'));
-      if (bytes.length < 3) return;
-      // GoPro settings SET response: [1-byte-header=length, settingId, resultCode]
-      // Header bit layout: bit7=continuation, bit6=2-byte-ext, bit5=12bit-ext, else 1-byte length
-      if ((bytes[0] & 0x60) !== 0) return; // Unexpected multi-byte header
-      const len = bytes[0] & 0x3f;
-      if (len < 2 || bytes.length < 1 + len) return;
-      const settingId = bytes[1];
-      const resultCode = bytes[2];
+      const writeResult = parseSettingWriteResponse(bytes);
+      if (!writeResult) return;
+
+      const { settingId, resultCode } = writeResult;
       if (resultCode !== 0x00) {
         debugWarn(
           'ble',
