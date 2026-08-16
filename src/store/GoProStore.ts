@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 
+import { setCategoryEnableProvider } from '../utils/debugLogging';
 import { create } from 'zustand';
 import { GoProPresetGroupData } from '../ble/PresetProtobuf';
 import { HardwareInfo } from '../types/KnownDevice';
@@ -665,3 +666,28 @@ export const useCameraModel = () =>
     const modelNo = selectActiveCameraState(state).hardwareInfo?.modelNo ?? null;
     return resolveCameraModelKeyFromModelNo(modelNo);
   });
+
+setCategoryEnableProvider((category) => {
+  const state = useGoProStore.getState();
+  switch (category) {
+    case 'ble':
+      return state.debugLogBle;
+    case 'bleCache':
+      return state.debugLogBleCache;
+    case 'blePreset':
+      return state.debugLogBlePreset;
+    case 'bleAsync':
+      return state.debugLogBleAsync;
+    case 'bleQueue':
+      return state.debugLogBleQueue;
+    case 'wifi':
+      return state.debugLogWifi;
+    case 'iap':
+      return state.debugLogIap;
+    case 'notif':
+    case 'storage':
+    case 'ui':
+    default:
+      return true;
+  }
+});

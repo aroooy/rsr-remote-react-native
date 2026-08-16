@@ -20,8 +20,6 @@
  * SOFTWARE.
  */
 
-import { useGoProStore } from '../store/GoProStore';
-
 export type DebugLogCategory =
   | 'ble'
   | 'bleCache'
@@ -34,30 +32,19 @@ export type DebugLogCategory =
   | 'storage'
   | 'ui';
 
-const isCategoryEnabled = (category: DebugLogCategory): boolean => {
-  const state = useGoProStore.getState();
+export type CategoryEnableProvider = (category: DebugLogCategory) => boolean;
 
-  switch (category) {
-    case 'ble':
-      return state.debugLogBle;
-    case 'bleCache':
-      return state.debugLogBleCache;
-    case 'blePreset':
-      return state.debugLogBlePreset;
-    case 'bleAsync':
-      return state.debugLogBleAsync;
-    case 'bleQueue':
-      return state.debugLogBleQueue;
-    case 'wifi':
-      return state.debugLogWifi;
-    case 'iap':
-      return state.debugLogIap;
-    case 'notif':
-    case 'storage':
-    case 'ui':
-    default:
-      return true;
+let categoryEnableProvider: CategoryEnableProvider | null = null;
+
+export const setCategoryEnableProvider = (provider: CategoryEnableProvider | null): void => {
+  categoryEnableProvider = provider;
+};
+
+const isCategoryEnabled = (category: DebugLogCategory): boolean => {
+  if (categoryEnableProvider) {
+    return categoryEnableProvider(category);
   }
+  return true;
 };
 
 export const debugLog = (category: DebugLogCategory, ...args: unknown[]): void => {
