@@ -43,6 +43,7 @@ import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import type { Device } from 'react-native-ble-plx';
 import { useGoProStore } from '../store/GoProStore';
 import { goProBle } from '../ble/GoProBLEManager';
+import { debugLog, debugWarn } from '../utils/debugLogging';
 import { haptics } from '../utils/haptics';
 import { isGoProBleName } from '../device/GoProDeviceFilter';
 import {
@@ -179,7 +180,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       const rows = await getKnownDevices();
       setKnownDevices(rows);
     } catch (e) {
-      console.warn('Failed to load known devices', e);
+      debugWarn('ui', 'Failed to load known devices', e);
     }
   };
 
@@ -383,7 +384,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       await Promise.all(newList.map((device, i) => updateKnownDeviceSortOrder(device.id, i)));
       await loadKnownDevices();
     } catch (e) {
-      console.warn('Failed to reorder devices', e);
+      debugWarn('ui', 'Failed to reorder devices', e);
     }
   };
 

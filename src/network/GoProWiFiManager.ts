@@ -24,7 +24,7 @@ import { PermissionsAndroid, Platform } from 'react-native';
 import WifiManager from 'react-native-wifi-reborn';
 import { useGoProStore, selectActiveCameraState } from '../store/GoProStore';
 import { goProBle } from '../ble/GoProBLEManager';
-import { debugLog } from '../utils/debugLogging';
+import { debugLog, debugWarn, debugError } from '../utils/debugLogging';
 import { WIFI_HTTP_REQUEST_TIMEOUT_MS } from '../constants/Timeouts';
 import { t } from '../i18n';
 
@@ -162,7 +162,7 @@ class GoProWiFiManager {
         }
         return false;
       }
-      console.error('[WiFi] Connection failed:', e);
+      debugError('wifi', '[WiFi] Connection failed:', e);
       store.setWifiStatus('disconnected');
       return false;
     }
@@ -179,7 +179,7 @@ class GoProWiFiManager {
       }
       debugLog('wifi', '[WiFi] Disconnected from camera.');
     } catch (e) {
-      console.warn('[WiFi] Error disconnecting:', e);
+      debugWarn('wifi', '[WiFi] Error disconnecting:', e);
     } finally {
       store.setWifiStatus('disconnected');
     }
@@ -195,15 +195,15 @@ class GoProWiFiManager {
         debugLog('wifi', '[WiFi] Preview stream started successfully.');
         return true;
       } else {
-        console.warn(`[WiFi] Failed to start stream: HTTP ${response.status}`);
+        debugWarn('wifi', `[WiFi] Failed to start stream: HTTP ${response.status}`);
         return false;
       }
     } catch (e) {
       if (isAbortError(e)) {
-        console.warn('[WiFi] Start stream aborted.');
+        debugWarn('wifi', '[WiFi] Start stream aborted.');
         return false;
       }
-      console.error('[WiFi] Error starting stream:', e);
+      debugError('wifi', '[WiFi] Error starting stream:', e);
       return false;
     }
   }
@@ -229,9 +229,9 @@ class GoProWiFiManager {
     } catch (e: any) {
       // Demote expected fetch failures (e.g. from network already being disconnected) to warnings
       if (e.name === 'AbortError' || e.message?.includes('Network request failed')) {
-        console.warn(`[WiFi] Ignored error stopping stream: ${e.message}`);
+        debugWarn('wifi', `[WiFi] Ignored error stopping stream: ${e.message}`);
       } else {
-        console.error('[WiFi] Error stopping stream:', e);
+        debugError('wifi', '[WiFi] Error stopping stream:', e);
       }
       return false;
     }

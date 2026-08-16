@@ -82,6 +82,7 @@ import {
 } from '../constants/layout';
 import { getPresetDisplayName } from '../constants/GoProMetadata';
 import { goProBle } from '../ble/GoProBLEManager';
+import { debugWarn } from '../utils/debugLogging';
 import { PreviewPlayer } from './PreviewPlayer';
 import { Ionicons } from '@expo/vector-icons';
 import { AspectRatioIcon } from './AspectRatioIcon';
@@ -356,7 +357,7 @@ export const SettingsPanel = () => {
         const map = await getSettingVisibilityMap(connectedDeviceId, displayPresetId);
         setVisibilityMap(map);
       } catch (e) {
-        console.warn('Failed to load setting visibility', e);
+        debugWarn('ui', 'Failed to load setting visibility', e);
       }
     };
     void loadVisibility();

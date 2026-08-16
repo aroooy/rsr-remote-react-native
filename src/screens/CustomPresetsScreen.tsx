@@ -44,6 +44,7 @@ import {
   updateSortOrders,
 } from '../device/CustomPresetRepository';
 import { goProBle } from '../ble/GoProBLEManager';
+import { debugWarn } from '../utils/debugLogging';
 import { GoProSettingId } from '../constants/GoProSettingId';
 import { GoProPresetGroup } from '../constants/GoProPresetGroup';
 import { getThemeColors } from '../constants/Theme';
@@ -177,7 +178,7 @@ export const CustomPresetsScreen = () => {
     try {
       parsedSettings = JSON.parse(presetToApply.settingsJson) as Record<number, number>;
     } catch (e) {
-      console.warn('Failed to parse custom preset JSON', e);
+      debugWarn('ui', 'Failed to parse custom preset JSON', e);
       useGoProStore.getState().setToastMessage(t('presets.invalidPresetData'));
       return;
     }
@@ -187,7 +188,7 @@ export const CustomPresetsScreen = () => {
     navigation.goBack();
 
     void goProBle.applyCustomPreset(parsedSettings, includeSystemSettings).catch((e) => {
-      console.warn('Failed to apply custom preset', e);
+      debugWarn('ui', 'Failed to apply custom preset', e);
       useGoProStore.getState().setToastMessage(t('presets.applyFailed'));
     });
   };

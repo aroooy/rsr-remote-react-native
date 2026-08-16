@@ -28,6 +28,7 @@ import notifee, {
   AuthorizationStatus,
 } from '@notifee/react-native';
 import { t } from '../i18n';
+import { debugWarn } from '../utils/debugLogging';
 import { useGoProStore } from '../store/GoProStore';
 
 /**
@@ -126,7 +127,7 @@ export async function initNotifications(): Promise<void> {
     }
     channelsReady = true;
   } catch (e) {
-    console.warn('[notif] initNotifications failed', e);
+    debugWarn('notif', '[notif] initNotifications failed', e);
   }
 }
 
@@ -138,7 +139,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
       settings.authorizationStatus === AuthorizationStatus.PROVISIONAL
     );
   } catch (e) {
-    console.warn('[notif] requestNotificationPermission failed', e);
+    debugWarn('notif', '[notif] requestNotificationPermission failed', e);
     return false;
   }
 }
@@ -158,7 +159,7 @@ export async function warnUnexpectedDisconnect(deviceName: string): Promise<void
       },
     });
   } catch (e) {
-    console.warn('[notif] warnUnexpectedDisconnect failed', e);
+    debugWarn('notif', '[notif] warnUnexpectedDisconnect failed', e);
   }
 }
 
@@ -195,7 +196,7 @@ export async function notifyTemperature(
       },
     });
   } catch (e) {
-    console.warn('[notif] notifyTemperature failed', e);
+    debugWarn('notif', '[notif] notifyTemperature failed', e);
   }
 }
 
@@ -204,7 +205,7 @@ export async function clearTemperature(deviceId: string, kind: TempKind): Promis
   try {
     await notifee.cancelNotification(tempId(deviceId, kind));
   } catch (e) {
-    console.warn('[notif] clearTemperature failed', e);
+    debugWarn('notif', '[notif] clearTemperature failed', e);
   }
 }
 
@@ -218,7 +219,7 @@ export function registerConnectionForegroundService(): void {
   try {
     notifee.registerForegroundService(() => new Promise<void>(() => {}));
   } catch (e) {
-    console.warn('[notif] registerForegroundService failed', e);
+    debugWarn('notif', '[notif] registerForegroundService failed', e);
   }
 }
 
@@ -255,7 +256,7 @@ export async function startConnectionForegroundService(): Promise<void> {
     await renderForegroundService();
     fgsActive = true;
   } catch (e) {
-    console.warn('[notif] startConnectionForegroundService failed', e);
+    debugWarn('notif', '[notif] startConnectionForegroundService failed', e);
   }
 }
 
@@ -268,7 +269,7 @@ export async function refreshConnectionForegroundService(): Promise<void> {
   try {
     await renderForegroundService();
   } catch (e) {
-    console.warn('[notif] refreshConnectionForegroundService failed', e);
+    debugWarn('notif', '[notif] refreshConnectionForegroundService failed', e);
   }
 }
 
@@ -283,7 +284,7 @@ export async function stopConnectionForegroundService(): Promise<void> {
     // so a stale "connected" notification can never linger after disconnect.
     await notifee.cancelNotification(FGS_NOTIFICATION_ID);
   } catch (e) {
-    console.warn('[notif] stopForegroundService failed', e);
+    debugWarn('notif', '[notif] stopForegroundService failed', e);
   }
 }
 
@@ -303,7 +304,7 @@ export async function presentRecordingStatus(): Promise<void> {
       body: formatStatusBody(s),
     });
   } catch (e) {
-    console.warn('[notif] presentRecordingStatus failed', e);
+    debugWarn('notif', '[notif] presentRecordingStatus failed', e);
   }
 }
 
@@ -313,6 +314,6 @@ export async function clearRecordingStatus(): Promise<void> {
   try {
     await notifee.cancelNotification(IOS_REC_NOTIFICATION_ID);
   } catch (e) {
-    console.warn('[notif] clearRecordingStatus failed', e);
+    debugWarn('notif', '[notif] clearRecordingStatus failed', e);
   }
 }

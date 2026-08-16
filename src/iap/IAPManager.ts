@@ -47,7 +47,7 @@ import {
   clearPurchases,
 } from '../device/PurchaseRepository';
 import { IAP_PRODUCT_IDS, IAPProductId, getProductDisplayName } from './IAPProducts';
-import { debugLog } from '../utils/debugLogging';
+import { debugLog, debugWarn, debugError } from '../utils/debugLogging';
 
 // ---------- react-native-iap dynamic import ----------
 // We try to require react-native-iap at runtime. If it's not installed
@@ -113,7 +113,7 @@ export const initIAP = async (onPurchaseSuccess: OnPurchaseSuccess): Promise<voi
       );
       try {
         if (!purchase?.productId || !purchase?.purchaseToken) {
-          console.warn('[IAP][listener] missing productId/purchaseToken, skip');
+          debugWarn('iap', '[IAP][listener] missing productId/purchaseToken, skip');
           return;
         }
         // Only grant entitlements for completed purchases. On Android the same
@@ -136,13 +136,13 @@ export const initIAP = async (onPurchaseSuccess: OnPurchaseSuccess): Promise<voi
         debugLog('iap', '[IAP][listener] DB after save =', verify);
         _onPurchaseSuccess?.(purchase.productId);
       } catch (e) {
-        console.error('[IAP][listener] failed to process purchase', e);
+        debugError('iap', '[IAP][listener] failed to process purchase', e);
       }
     });
 
     purchaseErrorSubscription = rniap.purchaseErrorListener((error: any) => {
       if (error.code !== 'E_USER_CANCELLED') {
-        console.warn('[IAP] Purchase error', error);
+        debugWarn('iap', '[IAP] Purchase error', error);
       }
     });
 
@@ -155,10 +155,10 @@ export const initIAP = async (onPurchaseSuccess: OnPurchaseSuccess): Promise<voi
       const fetchFn = rniap.fetchProducts ?? rniap.getProducts;
       await fetchFn({ skus: [...IAP_PRODUCT_IDS], type: 'in-app' });
     } catch (productError) {
-      console.warn('[IAP] fetchProducts failed (non-fatal)', productError);
+      debugWarn('iap', '[IAP] fetchProducts failed (non-fatal)', productError);
     }
   } catch (e) {
-    console.warn('[IAP] initConnection failed', e);
+    debugWarn('iap', '[IAP] initConnection failed', e);
   }
 };
 
@@ -207,7 +207,7 @@ export const purchaseProduct = (productId: IAPProductId): void => {
                 Alert.alert(t('iap.purchaseFailed'), e.message ?? t('iap.unknownError'));
               }
             } catch (restoreErr: any) {
-              console.error('[IAP] Auto-restore on already owned item failed', restoreErr);
+              debugError('iap', '[IAP] Auto-restore on already owned item failed', restoreErr);
               Alert.alert(t('iap.purchaseFailed'), e.message ?? t('iap.unknownError'));
             }
           } else if (e.code !== 'E_USER_CANCELLED') {
@@ -234,7 +234,7 @@ const restorePurchasesCore = async (): Promise<string[]> => {
       await rniap.syncIOS();
       debugLog('iap', '[IAP][restore] syncIOS() OK');
     } catch (e) {
-      console.warn('[IAP][restore] syncIOS failed (continuing)', e);
+      debugWarn('iap', '[IAP][restore] syncIOS failed (continuing)', e);
     }
   }
 
@@ -260,7 +260,7 @@ const restorePurchasesCore = async (): Promise<string[]> => {
       _onPurchaseSuccess?.(pid);
     }
   } else {
-    console.warn('[IAP][restore] store returned 0 items — keeping local DB intact');
+    debugWarn('iap', '[IAP][restore] store returned 0 items — keeping local DB intact');
   }
   debugLog('iap', '[IAP][restore] done, restored =', restored);
   return restored;
@@ -281,7 +281,7 @@ export const restorePurchases = async (): Promise<string[]> => {
   try {
     return await restorePurchasesCore();
   } catch (e: any) {
-    console.error('[IAP][restore] failed', e);
+    debugError('iap', '[IAP][restore] failed', e);
     Alert.alert(t('iap.restoreFailed'), e.message ?? t('iap.unknownError'));
     return [];
   }

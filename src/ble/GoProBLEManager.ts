@@ -103,7 +103,7 @@ import {
   saveCapabilityCache,
   clearAllCapabilityCaches as clearAllCapabilityCachesFromDb,
 } from '../device/CapabilityCacheRepository';
-import { debugDebug, debugLog, debugWarn } from '../utils/debugLogging';
+import { debugDebug, debugLog, debugWarn, debugError } from '../utils/debugLogging';
 import { isSettingModelSupported } from '../constants/settingConstraints';
 import { isHero11OrNewerModel, isHero12Or13Model } from '../cameraModels/shared/modelNoHelpers';
 import { resolveCameraModelFromHardwareInfo } from '../cameraModels/shared/modelNumber';
@@ -939,7 +939,7 @@ class GoProBLEManager {
         this.recreateManager();
       }
       if (!this.isCancellationError(e, device.id)) {
-        console.error('Connection failed:', e);
+        debugError('ble', 'Connection failed:', e);
         this.ui.alert(t('ble.connectionError'), e?.message || String(e));
       }
       this.clearConnectionResources(device.id);

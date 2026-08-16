@@ -22,6 +22,7 @@
 
 import * as SQLite from 'expo-sqlite';
 import { CAPABILITY_CACHE_SAVE_DEBOUNCE_MS } from '../constants/Timeouts';
+import { debugWarn } from '../utils/debugLogging';
 
 const DB_NAME = 'gopro_devices.db';
 const TABLE_NAME = 'capability_cache_v1';
@@ -59,7 +60,7 @@ export const loadCapabilityCache = async (
   try {
     return JSON.parse(row.data);
   } catch (e) {
-    console.warn('[BLE] Failed to parse capability cache JSON', e);
+    debugWarn('bleCache', '[BLE] Failed to parse capability cache JSON', e);
     return {};
   }
 };

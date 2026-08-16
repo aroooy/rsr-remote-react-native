@@ -23,7 +23,16 @@
 import { useGoProStore } from '../store/GoProStore';
 
 export type DebugLogCategory =
-  'ble' | 'bleCache' | 'blePreset' | 'bleAsync' | 'bleQueue' | 'wifi' | 'iap';
+  | 'ble'
+  | 'bleCache'
+  | 'blePreset'
+  | 'bleAsync'
+  | 'bleQueue'
+  | 'wifi'
+  | 'iap'
+  | 'notif'
+  | 'storage'
+  | 'ui';
 
 const isCategoryEnabled = (category: DebugLogCategory): boolean => {
   const state = useGoProStore.getState();
@@ -43,6 +52,9 @@ const isCategoryEnabled = (category: DebugLogCategory): boolean => {
       return state.debugLogWifi;
     case 'iap':
       return state.debugLogIap;
+    case 'notif':
+    case 'storage':
+    case 'ui':
     default:
       return true;
   }
@@ -61,4 +73,9 @@ export const debugDebug = (category: DebugLogCategory, ...args: unknown[]): void
 export const debugWarn = (category: DebugLogCategory | 'system', ...args: unknown[]): void => {
   if (category !== 'system' && !isCategoryEnabled(category)) return;
   console.warn(...args);
+};
+
+export const debugError = (category: DebugLogCategory | 'system', ...args: unknown[]): void => {
+  if (category !== 'system' && !isCategoryEnabled(category)) return;
+  console.error(...args);
 };

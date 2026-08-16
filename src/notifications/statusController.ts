@@ -29,6 +29,7 @@ import {
   notifyTemperature,
   clearTemperature,
 } from './notifications';
+import { debugWarn } from '../utils/debugLogging';
 
 /**
  * Bridges live camera state to the status notification.
@@ -134,7 +135,7 @@ export function initStatusNotifications(): () => void {
       prevRecording = recording;
       prevWarnSig = warnSig;
     } catch (e) {
-      console.warn('[notif] status controller error', e);
+      debugWarn('notif', '[notif] status controller error', e);
     }
   };
 

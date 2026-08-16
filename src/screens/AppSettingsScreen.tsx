@@ -42,6 +42,7 @@ import { getThemeColors, AppTheme } from '../constants/Theme';
 import { restorePurchases } from '../iap/IAPManager';
 import { getProductDisplayName, IAPProductId, IAP_PRODUCT_IDS } from '../iap/IAPProducts';
 import { goProBle } from '../ble/GoProBLEManager';
+import { debugWarn } from '../utils/debugLogging';
 import { setAppLocale } from '../i18n';
 import type { AppLocale } from '../i18n';
 import { Ionicons } from '@expo/vector-icons';
@@ -194,7 +195,7 @@ export const AppSettingsScreen = () => {
               Alert.alert(t('alert.capabilityCacheCleared'), t('alert.capabilityCacheClearedDesc'));
             })
             .catch((error) => {
-              console.warn('[AppSettings] Failed to clear capability cache', error);
+              debugWarn('ui', '[AppSettings] Failed to clear capability cache', error);
               Alert.alert(t('alert.clearFailed'), t('alert.clearFailedDesc'));
             })
             .finally(() => {
@@ -219,7 +220,8 @@ export const AppSettingsScreen = () => {
                 try {
                   await goProBle.fetchPresetStatus();
                 } catch (error) {
-                  console.warn(
+                  debugWarn(
+                    'ui',
                     '[AppSettings] Failed to refresh live preset status after preset cache clear',
                     error,
                   );
@@ -233,7 +235,7 @@ export const AppSettingsScreen = () => {
               );
             })
             .catch((error) => {
-              console.warn('[AppSettings] Failed to clear preset cache', error);
+              debugWarn('ui', '[AppSettings] Failed to clear preset cache', error);
               Alert.alert(t('alert.clearFailed'), t('alert.clearFailedDesc'));
             })
             .finally(() => {
