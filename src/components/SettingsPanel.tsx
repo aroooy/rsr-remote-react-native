@@ -129,6 +129,8 @@ import {
 import { TimePickerModal } from './settingsPanel/TimePickerModal';
 import { usePresetRename } from './settingsPanel/usePresetRename';
 import { PresetRenameModal } from './settingsPanel/PresetRenameModal';
+import { VisibilityControlModal } from './settingsPanel/VisibilityControlModal';
+import { PresetGroupGrid } from './settingsPanel/PresetGroupGrid';
 import { haptics } from '../utils/haptics';
 
 export const SettingsPanel = () => {
@@ -624,249 +626,6 @@ export const SettingsPanel = () => {
     );
   };
 
-  const renderModeSelector = () => (
-    <View style={[styles.modeSelectorContainer, { borderBottomColor: colors.border }]}>
-      {/* Mode tabs — Hidden on HeroMini11 since it does not have a mode concept */}
-      {!isHero11MiniModel(currentModelNo) && (
-        <View style={styles.modeTabRow}>
-          {(
-            [
-              {
-                label: t('control.video'),
-                icon: 'videocam' as const,
-                groupId: GoProPresetGroup.VIDEO,
-                selectId: GoProPresetGroupSelectId.VIDEO,
-              },
-              {
-                label: t('control.photo'),
-                icon: 'camera' as const,
-                groupId: GoProPresetGroup.PHOTO,
-                selectId: GoProPresetGroupSelectId.PHOTO,
-              },
-              {
-                label: t('control.timelapse'),
-                icon: 'timer-outline' as const,
-                groupId: GoProPresetGroup.TIMELAPSE,
-                selectId: GoProPresetGroupSelectId.TIMELAPSE,
-              },
-            ] as const
-          ).map(({ label, icon, groupId, selectId }) => {
-            const isActive = currentGroupId === groupId;
-            return (
-              <TouchableOpacity
-                key={groupId}
-                style={[
-                  styles.modeTab,
-                  isActive
-                    ? [
-                        styles.modeTabActive,
-                        { backgroundColor: colors.modeActive, borderColor: colors.modeActive },
-                      ]
-                    : { borderColor: colors.toggleBorder, backgroundColor: colors.toggleBg },
-                ]}
-                onPress={() => handleLoadPresetGroup(selectId)}
-              >
-                <Ionicons
-                  name={icon}
-                  size={18}
-                  color={isActive ? colors.modeActiveText : colors.textSecondary}
-                  style={styles.modeTabIcon}
-                />
-                <Text
-                  style={[
-                    styles.modeTabText,
-                    isActive && styles.modeTabTextActive,
-                    isActive ? { color: colors.modeActiveText } : { color: colors.textSecondary },
-                  ]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.7}
-                >
-                  {label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
-
-      {/* Lens Mode / Lens Direction (Max exclusive, placed above preset chips) */}
-      {isMaxModel(currentModelNo) && renderMaxLensModeSelectors()}
-
-      {/* Preset chips */}
-      {currentGroupPresets.length > 0 ? (
-        <ScrollView
-          ref={presetScrollRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.presetChipScroll}
-          contentContainerStyle={styles.presetChipContent}
-        >
-          {currentGroupPresets.map((preset) => {
-            const isActive = currentPresetId === preset.id;
-            const isCustomPreset = preset.userDefined;
-            const label = getPresetLabel(preset.id, preset.customName, preset.iconId);
-            const iconName = getPresetIoniconName(preset.iconId, currentGroupId);
-            const iconColor = isActive ? colors.accent : colors.textSecondary;
-            const presetIconShellColor = isActive
-              ? colors.accent
-              : isCustomPreset
-                ? colors.accentLight
-                : colors.surfaceSecondary;
-            const presetIconBorderColor = isActive
-              ? colors.accent
-              : isCustomPreset
-                ? colors.accentLight
-                : colors.toggleBorder;
-            const presetIconColor = isActive
-              ? colors.toggleSelectedText
-              : isCustomPreset
-                ? colors.accent
-                : colors.textSecondary;
-            const canRename = preset.userDefined && supportsPresetRename;
-            return (
-              <TouchableOpacity
-                key={preset.id}
-                style={[
-                  styles.presetChip,
-                  isActive && styles.presetChipActive,
-                  isActive
-                    ? { backgroundColor: colors.accentLight, borderColor: colors.accent }
-                    : { borderColor: colors.toggleBorder, backgroundColor: colors.surface },
-                ]}
-                onPress={() => handleLoadPreset(preset.id)}
-                onLongPress={canRename ? () => handleLongPressPreset(preset) : undefined}
-                delayLongPress={450}
-                onLayout={(e) => {
-                  const { x, width } = e.nativeEvent.layout;
-                  chipOffsetsRef.current.set(preset.id, { x, width });
-                  // Initial layout: Scroll immediately (no animation) on active chip's onLayout
-                  // since offsets are not recorded yet when useEffect fires.
-                  if (preset.id === currentPresetId) {
-                    presetScrollRef.current?.scrollTo({ x: x - 12, animated: false });
-                  }
-                }}
-              >
-                <View style={styles.presetChipInner}>
-                  <View
-                    style={[
-                      styles.presetChipIconShell,
-                      {
-                        backgroundColor: presetIconShellColor,
-                        borderColor: presetIconBorderColor,
-                      },
-                    ]}
-                  >
-                    <Ionicons name={iconName as any} size={14} color={presetIconColor} />
-                  </View>
-                  <Text
-                    style={[
-                      styles.presetChipText,
-                      isActive && styles.presetChipTextActive,
-                      { color: iconColor },
-                    ]}
-                  >
-                    {label}
-                  </Text>
-                  {isCustomPreset ? (
-                    <View
-                      style={[
-                        styles.presetChipBadge,
-                        {
-                          backgroundColor: isActive ? colors.accent : colors.accentLight,
-                          borderColor: colors.accent,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.presetChipBadgeText,
-                          { color: isActive ? colors.toggleSelectedText : colors.accent },
-                        ]}
-                      >
-                        CUSTOM
-                      </Text>
-                    </View>
-                  ) : null}
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      ) : (
-        // Prior to fetching Protobuf — display fallback known preset IDs per group
-        <ScrollView
-          ref={presetScrollRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.presetChipScroll}
-          contentContainerStyle={styles.presetChipContent}
-        >
-          {(
-            (fallbackPresetsByModel[cameraModel] ?? {})[currentGroupId ?? GoProPresetGroup.VIDEO] ??
-            []
-          ).map((presetId) => {
-            const isActive = currentPresetId === presetId;
-            const label = getPresetDisplayName(presetId, cameraModel);
-            const iconName = getPresetIoniconName(undefined, currentGroupId);
-            const iconColor = isActive ? colors.accent : colors.textSecondary;
-            const presetIconShellColor = isActive ? colors.accent : colors.surfaceSecondary;
-            const presetIconColor = isActive ? colors.toggleSelectedText : iconColor;
-            return (
-              <TouchableOpacity
-                key={presetId}
-                style={[
-                  styles.presetChip,
-                  isActive && styles.presetChipActive,
-                  isActive
-                    ? { backgroundColor: colors.accentLight, borderColor: colors.accent }
-                    : { borderColor: colors.toggleBorder, backgroundColor: colors.surface },
-                ]}
-                onPress={() => handleLoadPreset(presetId)}
-                onLayout={(e) => {
-                  const { x, width } = e.nativeEvent.layout;
-                  chipOffsetsRef.current.set(presetId, { x, width });
-                  if (presetId === currentPresetId) {
-                    presetScrollRef.current?.scrollTo({ x: x - 12, animated: false });
-                  }
-                }}
-              >
-                <View style={styles.presetChipInner}>
-                  <View
-                    style={[
-                      styles.presetChipIconShell,
-                      {
-                        backgroundColor: presetIconShellColor,
-                        borderColor: isActive ? colors.accent : colors.toggleBorder,
-                      },
-                    ]}
-                  >
-                    <Ionicons name={iconName as any} size={14} color={presetIconColor} />
-                  </View>
-                  <Text
-                    style={[
-                      styles.presetChipText,
-                      isActive && styles.presetChipTextActive,
-                      { color: iconColor },
-                    ]}
-                  >
-                    {label}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      )}
-
-      {/* Media Format toggle (Timelapse/Nightlapse only) — Always visible right below preset chips, except on HeroMini11 */}
-      {showMediaFormatPrimary && renderPrimaryItem(GoProSettingId.MEDIA_FORMAT)}
-      {/* Framing (Aspect Ratio) — Always visible in all modes */}
-      {showFramingSelector && renderFramingSelector()}
-      {/* Resolution — Always visible */}
-      {showResolutionSelector && renderResolutionSelector()}
-    </View>
-  );
   // Force PHOTO_OUTPUT display (RAW/Standard) during Timelapse/Nightlapse Photo format.
   // Acts as a fallback UI because some camera models return empty capabilities.
   const mediaFormatNow = settings[GoProSettingId.MEDIA_FORMAT];
@@ -1683,7 +1442,29 @@ export const SettingsPanel = () => {
         style={isUiLocked ? { opacity: 0.5 } : undefined}
       >
         {/* Mode/preset switching tabs */}
-        {renderModeSelector()}
+        <PresetGroupGrid
+          currentModelNo={currentModelNo}
+          cameraModel={cameraModel}
+          currentGroupId={currentGroupId}
+          currentPresetId={currentPresetId}
+          currentGroupPresets={currentGroupPresets}
+          fallbackPresetsByModel={fallbackPresetsByModel}
+          supportsPresetRename={supportsPresetRename}
+          colors={colors}
+          handleLoadPresetGroup={handleLoadPresetGroup}
+          handleLoadPreset={handleLoadPreset}
+          handleLongPressPreset={handleLongPressPreset}
+          getPresetLabel={getPresetLabel}
+          getPresetDisplayName={getPresetDisplayName}
+          getPresetIoniconName={getPresetIoniconName}
+          renderMaxLensModeSelectors={renderMaxLensModeSelectors}
+        />
+        {/* Media Format toggle (Timelapse/Nightlapse only) — Always visible right below preset chips, except on HeroMini11 */}
+        {showMediaFormatPrimary && renderPrimaryItem(GoProSettingId.MEDIA_FORMAT)}
+        {/* Framing (Aspect Ratio) — Always visible in all modes */}
+        {showFramingSelector && renderFramingSelector()}
+        {/* Resolution — Always visible */}
+        {showResolutionSelector && renderResolutionSelector()}
       </View>
 
       {/* Primary items (Toggle Buttons) — Fixed outside ScrollView */}
@@ -1991,131 +1772,20 @@ export const SettingsPanel = () => {
         </View>
       </Modal>
 
-      <Modal
-        visible={isVisibilityModalVisible && isPurchased}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setIsVisibilityModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <TouchableOpacity
-            style={[StyleSheet.absoluteFill, styles.modalOverlayBg]}
-            activeOpacity={1}
-            onPress={() => setIsVisibilityModalVisible(false)}
-          />
-          <View style={[styles.modalContent, { backgroundColor: colors.modalBg }]}>
-            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
-              {t('control.visibleAdvancedItems')}
-            </Text>
-            <ScrollView showsVerticalScrollIndicator={true}>
-              {modalShootingConfigurableKeys.length > 0 && (
-                <View style={styles.modalSectionContainer}>
-                  <Text style={[styles.modalSectionHeader, { color: colors.textMuted }]}>
-                    {t('control.shootingSettings')}
-                  </Text>
-                  {modalShootingConfigurableKeys.map((item) => {
-                    const isVisible = isVisibleByDefault(item);
-                    return (
-                      <View
-                        key={item}
-                        style={[styles.visibilityRow, { borderBottomColor: colors.borderLight }]}
-                      >
-                        <Text style={[styles.visibilityText, { color: colors.textPrimary }]}>
-                          {getSettingName(
-                            item,
-                            cameraModel,
-                            displayPresetId,
-                            displaySettings[GoProSettingId.MEDIA_FORMAT],
-                          )}
-                        </Text>
-                        <Switch
-                          value={isVisible}
-                          onValueChange={(value) => handleVisibilityChange(item, value)}
-                        />
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
-            </ScrollView>
-            <TouchableOpacity
-              style={[styles.modalClose, { backgroundColor: colors.surfaceSecondary }]}
-              onPress={() => setIsVisibilityModalVisible(false)}
-            >
-              <Text style={[styles.modalCloseText, { color: colors.danger }]}>
-                {t('common.done')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Purchase prompt when non-purchased user taps Visible Items */}
-      <Modal
-        visible={isVisibilityModalVisible && !isPurchased}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setIsVisibilityModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <TouchableOpacity
-            style={[StyleSheet.absoluteFill, styles.modalOverlayBg]}
-            activeOpacity={1}
-            onPress={() => setIsVisibilityModalVisible(false)}
-          />
-          <View style={[styles.modalContent, { backgroundColor: colors.modalBg }]}>
-            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
-              {t('control.protuneRequired')}
-            </Text>
-            <Text
-              style={{
-                color: colors.textSecondary,
-                fontSize: 14,
-                textAlign: 'center',
-                marginVertical: 16,
-                paddingHorizontal: 16,
-              }}
-            >
-              {currentProductId
-                ? t('control.unlockAdvancedFor', {
-                    product: getProductDisplayName(currentProductId as IAPProductId),
-                  })
-                : t('control.connectForAdvanced')}
-            </Text>
-            {currentProductId && (
-              <TouchableOpacity
-                style={{
-                  backgroundColor: colors.premiumAccent,
-                  borderRadius: 10,
-                  paddingVertical: 14,
-                  paddingHorizontal: 32,
-                  marginBottom: 8,
-                }}
-                onPress={() => {
-                  setIsVisibilityModalVisible(false);
-                  purchaseProduct(currentProductId as IAPProductId);
-                }}
-              >
-                <Text
-                  style={{ color: '#000', fontWeight: '700', fontSize: 16, textAlign: 'center' }}
-                >
-                  {t('control.upgrade', {
-                    product: getProductDisplayName(currentProductId as IAPProductId),
-                  })}
-                </Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              style={[styles.modalClose, { backgroundColor: colors.surfaceSecondary }]}
-              onPress={() => setIsVisibilityModalVisible(false)}
-            >
-              <Text style={[styles.modalCloseText, { color: colors.danger }]}>
-                {t('common.cancel')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <VisibilityControlModal
+        visible={isVisibilityModalVisible}
+        isPurchased={isPurchased}
+        onClose={() => setIsVisibilityModalVisible(false)}
+        colors={colors}
+        modalShootingConfigurableKeys={modalShootingConfigurableKeys}
+        isVisibleByDefault={isVisibleByDefault}
+        handleVisibilityChange={handleVisibilityChange}
+        cameraModel={cameraModel}
+        displayPresetId={displayPresetId}
+        displaySettings={displaySettings}
+        currentProductId={currentProductId}
+        purchaseProduct={purchaseProduct}
+      />
 
       {/* Rename Custom Preset (Triggered on long press) */}
       <PresetRenameModal state={renameModalState} colors={colors} />
