@@ -131,6 +131,10 @@ import { usePresetRename } from './settingsPanel/usePresetRename';
 import { PresetRenameModal } from './settingsPanel/PresetRenameModal';
 import { VisibilityControlModal } from './settingsPanel/VisibilityControlModal';
 import { PresetGroupGrid } from './settingsPanel/PresetGroupGrid';
+import { PrimarySettingRow } from './settingsPanel/PrimarySettingRow';
+import { SpecialRowView } from './settingsPanel/SpecialRowView';
+import { SettingOptionModal } from './settingsPanel/SettingOptionModal';
+import { OtherSettingRow } from './settingsPanel/OtherSettingRow';
 import { haptics } from '../utils/haptics';
 
 export const SettingsPanel = () => {
@@ -829,308 +833,45 @@ export const SettingsPanel = () => {
   };
 
   const renderPrimaryItem = (id: number) => {
-    const currentValue = pendingSettings[id] ?? settings[id];
-    let allowedValues = getFilteredSelectableValues(id);
-    if (
-      isHero12Or13MaxVideoPreset &&
-      id === GoProSettingId.HORIZONTAL_LEVELING &&
-      allowedValues.length === 0
-    ) {
-      return null;
-    }
-    // Show MEDIA_FORMAT (128) as a 2-choice toggle between Video/Photo during Timelapse/Nightlapse:
-    //   13 = Time Lapse Video, 20 = Time Lapse Photo
-    //   26 = Night Lapse Video, 21 = Night Lapse Photo
-    // Other submode values (TimeWarp, Star Trails, etc.) are irrelevant when Timelapse/Nightlapse is active.
-    const isTimelapseFormatToggle =
-      id === GoProSettingId.MEDIA_FORMAT &&
-      displayPresetId !== undefined &&
-      LAPSE_WITH_PHOTO_PRESETS.has(displayPresetId);
-    if (isTimelapseFormatToggle) {
-      const isNightlapse =
-        displayPresetId === PRESET_NIGHTLAPSE ||
-        displayPresetId === PRESET_MACRO_NIGHTLAPSE ||
-        displayPresetId === HERO13_EASY_MACRO_NIGHTLAPSE_PRESET;
-      const videoVal = isNightlapse ? 26 : 13;
-      const photoVal = isNightlapse ? 21 : 20;
-      const candidates = [videoVal, photoVal];
-      const filtered = candidates.filter((v) => allowedValues.includes(v));
-      if (filtered.length > 0) {
-        allowedValues = filtered;
-      } else {
-        // Fallback when capabilities have not loaded yet (always show the 2 choices)
-        allowedValues = candidates;
-      }
-    }
-
-    // For TIMELAPSE_PHOTO_OUTPUT under Timelapse Photo: Show Standard/RAW even if capabilities are empty.
-    // Exclude Max camera as it does not use TIMELAPSE_PHOTO_OUTPUT.
-    const currentMediaFormat = settings[GoProSettingId.MEDIA_FORMAT];
-    const isTimelapsePhotoOutput =
-      id === GoProSettingId.TIMELAPSE_PHOTO_OUTPUT &&
-      !isMaxModel(currentModelNo) &&
-      isTimelapseContextActive &&
-      displayPresetId !== undefined &&
-      LAPSE_WITH_PHOTO_PRESETS.has(displayPresetId) &&
-      (currentMediaFormat === 20 || currentMediaFormat === 21);
-    if (isTimelapsePhotoOutput && allowedValues.length === 0) {
-      allowedValues = [0, 1]; // 0=Standard, 1=RAW
-    }
-
-    allowedValues = filterPrimaryItemValues({
-      settingId: id,
-      allowedValues,
-      settings,
-      pendingSettings,
-      cameraModel,
-      currentPresetId: displayPresetId,
-      currentValue,
-    });
-
-    const isToggleLikePrimary =
-      GOPRO_SETTINGS_METADATA[id]?.isToggleButton === true ||
-      GOPRO_SETTINGS_METADATA[id]?.isBool === true;
-    if (isToggleLikePrimary) {
-      allowedValues = dedupeEquivalentSettingValues(
-        id,
-        allowedValues,
-        settingValueComparisonContext,
-      );
-    }
-
-    const renderValueLabel = (val: number): string => {
-      if (isTimelapseFormatToggle) {
-        if (val === 13 || val === 26) return t('control.timelapseVideo');
-        if (val === 20 || val === 21) return t('control.timelapsePhoto');
-      }
-      return getSettingValueNameForModelWithContext(
-        id,
-        val,
-        cameraModel,
-        { settings: displaySettings },
-        firmwareVersion,
-      );
-    };
-
-    // Clears old offsets when options change (e.g. upon preset switching)
-    const sig = allowedValues.join(',');
-    if (toggleAllowedSigsRef.current.get(id) !== sig) {
-      toggleAllowedSigsRef.current.set(id, sig);
-      toggleChipOffsetsRef.current.set(id, new Map());
-    }
-
-    // Normalization for VIDEO_PROFILE + HlgHDR:
-    //   Some Hero13 firmware versions may respond with 101 (new HDR scheme) when VideoProfile=1 (old HDR) is sent.
-    //   In this case, currentValue=101 would be incorrectly treated as "HLG".
-    //   If HlgHDR is defined and currentValue is 1 or 101, determine the button selection based on the hlgHdr value:
-    //     hlgHdr=0 -> HDR Mode -> Select and display the button for val=1
-    //     hlgHdr=1 -> HLG Mode -> Select and display the button for val=101
-    let displayCurrentValue = normalizeToggleSelectionValue(id, currentValue);
-    if (id === GoProSettingId.VIDEO_PROFILE && isHero13Model(currentModelNo)) {
-      const hlgHdr = settings[GoProSettingId.HLG_HDR];
-      if (hlgHdr !== undefined && (currentValue === 1 || currentValue === 101)) {
-        displayCurrentValue = hlgHdr === 0 ? 1 : 101;
-      }
-    }
-
     return (
-      <View key={id} style={[styles.primaryItemContainer, { borderBottomColor: colors.border }]}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.toggleGroup}
-          ref={(ref) => {
-            toggleScrollRefs.current.set(id, ref);
-          }}
-        >
-          <View style={styles.toggleLabelChip} pointerEvents="none">
-            <Text style={[styles.toggleLabelChipText, { color: colors.textMuted }]}>
-              {getSettingName(
-                id,
-                cameraModel,
-                displayPresetId,
-                displaySettings[GoProSettingId.MEDIA_FORMAT],
-              )}
-            </Text>
-          </View>
-          {allowedValues.map((val) => {
-            const isSelected = areSettingValuesEquivalent(
-              id,
-              displayCurrentValue,
-              val,
-              settingValueComparisonContext,
-            );
-            return (
-              <TouchableOpacity
-                key={val}
-                style={[
-                  styles.toggleButton,
-                  isSelected && styles.toggleButtonSelected,
-                  isSelected
-                    ? {
-                        backgroundColor: colors.toggleSelectedBg,
-                        borderColor: colors.toggleSelectedBg,
-                      }
-                    : { borderColor: colors.toggleBorder, backgroundColor: colors.toggleBg },
-                ]}
-                onPress={() => handleChangeValue(id, val)}
-                onLayout={(e) => {
-                  if (!toggleChipOffsetsRef.current.has(id)) {
-                    toggleChipOffsetsRef.current.set(id, new Map());
-                  }
-                  const x = e.nativeEvent.layout.x;
-                  toggleChipOffsetsRef.current.get(id)!.set(val, x);
-                  // Scroll immediately once the active button layout is determined
-                  // (Handles cases where re-rendering occurs after useEffect due to async BLE updates)
-                  if (isSelected) {
-                    toggleScrollRefs.current.get(id)?.scrollTo({ x: x - 8, animated: true });
-                  }
-                }}
-              >
-                <Text
-                  style={[
-                    styles.toggleText,
-                    isSelected && styles.toggleTextSelected,
-                    !isSelected && { color: colors.textSecondary },
-                  ]}
-                >
-                  {renderValueLabel(val)}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
+      <PrimarySettingRow
+        key={id}
+        id={id}
+        settings={settings}
+        pendingSettings={pendingSettings}
+        displaySettings={displaySettings}
+        allowedValues={getFilteredSelectableValues(id)}
+        isHero12Or13MaxVideoPreset={isHero12Or13MaxVideoPreset}
+        displayPresetId={displayPresetId}
+        isTimelapseContextActive={isTimelapseContextActive}
+        currentModelNo={currentModelNo}
+        cameraModel={cameraModel}
+        firmwareVersion={firmwareVersion}
+        colors={colors}
+        onChangeValue={handleChangeValue}
+        toggleScrollRefs={toggleScrollRefs}
+        toggleChipOffsetsRef={toggleChipOffsetsRef}
+        toggleAllowedSigsRef={toggleAllowedSigsRef}
+      />
     );
   };
 
   const renderSpecialRow = (row: SpecialRow) => {
     return (
-      <View
+      <SpecialRowView
         key={row.key}
-        style={[styles.primaryItemContainer, { borderBottomColor: colors.border }]}
-      >
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.toggleGroup}>
-          <View style={styles.toggleLabelChip} pointerEvents="none">
-            <Text style={[styles.toggleLabelChipText, { color: colors.textMuted }]}>
-              {row.label}
-            </Text>
-          </View>
-          {row.options.map((option) => {
-            const isSelected = option.isSelected;
-            return (
-              <TouchableOpacity
-                key={option.key}
-                style={[
-                  styles.toggleButton,
-                  isSelected && styles.toggleButtonSelected,
-                  isSelected
-                    ? {
-                        backgroundColor: colors.toggleSelectedBg,
-                        borderColor: colors.toggleSelectedBg,
-                      }
-                    : { borderColor: colors.toggleBorder, backgroundColor: colors.toggleBg },
-                ]}
-                onPress={() => {
-                  void handleSpecialRowActions(option.actions);
-                }}
-                disabled={option.actions.length === 0}
-              >
-                <Text
-                  style={[
-                    styles.toggleText,
-                    isSelected && styles.toggleTextSelected,
-                    !isSelected && { color: colors.textSecondary },
-                  ]}
-                >
-                  {option.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
+        row={row}
+        colors={colors}
+        onHandleActions={handleSpecialRowActions}
+      />
     );
   };
 
+  const isIosMultiColumn = Platform.OS === 'ios' && columnCount > 1;
+
   const renderOtherItem = (id: number) => {
-    const allowedValues = getFilteredSelectableValues(id);
-    const currentValue = settings[id];
-    const otherItemState = resolveOtherItemState({
-      settingId: id,
-      settings,
-      capabilities,
-      cameraModel,
-      allowedValues,
-      dashboardSubSettingIds: DASHBOARD_SUB_SETTING_IDS,
-    });
-    const { kind, isCapabilityDisabled } = otherItemState;
-    const hasPendingSettings = Object.keys(pendingSettings).length > 0;
-    const isMediaModMicConnectedForUi =
-      id === GoProSettingId.MEDIA_MOD_MIC && (mediaModMicStatus === 2 || isMediaModConnected);
-    const isEffectivelyDisabled =
-      (isMediaModMicConnectedForUi
-        ? otherItemState.constraint !== 'ok'
-        : otherItemState.isEffectivelyDisabled) ||
-      isRefreshing ||
-      hasPendingSettings;
-
-    if (kind === 'na') {
-      return (
-        <View key={id} style={[styles.settingItem, { borderBottomColor: colors.border }]}>
-          <Text
-            style={[styles.settingName, { color: colors.textSecondary, flex: 1 }]}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {getSettingName(
-              id,
-              cameraModel,
-              displayPresetId,
-              displaySettings[GoProSettingId.MEDIA_FORMAT],
-            )}
-          </Text>
-          <Text
-            style={[styles.settingValue, { color: colors.textMuted, flexShrink: 0, marginLeft: 4 }]}
-          >
-            N/A
-          </Text>
-        </View>
-      );
-    }
-
-    const sliderConfig = GOPRO_SETTINGS_METADATA[id]?.sliderConfig;
-    if (kind === 'slider' && sliderConfig) {
-      return (
-        <View
-          key={id}
-          style={isEffectivelyDisabled ? { opacity: 0.4 } : undefined}
-          pointerEvents={isEffectivelyDisabled ? 'none' : 'auto'}
-        >
-          <SliderSettingRow
-            id={id}
-            sliderConfig={sliderConfig}
-            currentValue={settings[id]}
-            pendingValue={undefined}
-            availableValues={allowedValues}
-            settingName={getSettingName(
-              id,
-              cameraModel,
-              displayPresetId,
-              displaySettings[GoProSettingId.MEDIA_FORMAT],
-            )}
-            onCommit={(value) => void handleChangeValue(id, value)}
-            colors={colors}
-          />
-        </View>
-      );
-    }
-
-    const isBool = GOPRO_SETTINGS_METADATA[id]?.isBool === true;
-    const isToggleButton = GOPRO_SETTINGS_METADATA[id]?.isToggleButton === true;
-
-    // Scheduled Capture: Dedicated UI (Switch + Time display + Time picker)
-    if (kind === 'scheduledCapture') {
+    // Scheduled Capture: Keep inline for dedicated time picker modal triggering
+    if (id === GoProSettingId.SCHEDULED_CAPTURE) {
       const isEnabled = scheduledTime !== null;
       const timeLabel = scheduledTime
         ? `${String(scheduledTime.hour).padStart(2, '0')}:${String(scheduledTime.minute).padStart(2, '0')}`
@@ -1186,171 +927,26 @@ export const SettingsPanel = () => {
       );
     }
 
-    if (kind === 'toggleButton' && isToggleButton) {
-      const { onValue, offValue } = getBoolValues(id, cameraModel);
-      const displayCurrentValue = normalizeToggleSelectionValue(id, currentValue);
-      return (
-        <View
-          key={id}
-          style={[
-            styles.settingItem,
-            { borderBottomColor: colors.border },
-            isEffectivelyDisabled && { opacity: 0.4 },
-          ]}
-        >
-          <Text style={[styles.settingName, { color: colors.textSecondary }]}>
-            {getSettingName(
-              id,
-              cameraModel,
-              displayPresetId,
-              displaySettings[GoProSettingId.MEDIA_FORMAT],
-            )}
-          </Text>
-          <View style={{ flexDirection: 'row', gap: 4 }}>
-            {[onValue, offValue].map((val) => {
-              const isSelected = areSettingValuesEquivalent(
-                id,
-                displayCurrentValue,
-                val,
-                settingValueComparisonContext,
-              );
-              const label = val === onValue ? t('common.on') : t('common.off');
-              return (
-                <TouchableOpacity
-                  key={val}
-                  style={[
-                    styles.toggleButton,
-                    isSelected && styles.toggleButtonSelected,
-                    isSelected
-                      ? {
-                          backgroundColor: colors.toggleSelectedBg,
-                          borderColor: colors.toggleSelectedBg,
-                        }
-                      : { backgroundColor: colors.toggleBg, borderColor: colors.toggleBorder },
-                  ]}
-                  onPress={() => {
-                    if (!isEffectivelyDisabled) void handleChangeValue(id, val);
-                  }}
-                  disabled={isEffectivelyDisabled}
-                >
-                  <Text
-                    style={[
-                      styles.toggleText,
-                      isSelected && styles.toggleTextSelected,
-                      { color: isSelected ? '#fff' : colors.textSecondary },
-                    ]}
-                  >
-                    {label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-      );
-    }
-
-    if (kind === 'bool' && isBool) {
-      const { onValue: boolOnValue, offValue: boolOffValue } = getBoolValues(id, cameraModel);
-      const isOn = areSettingValuesEquivalent(
-        id,
-        currentValue,
-        boolOnValue,
-        settingValueComparisonContext,
-      );
-      return (
-        <View
-          key={id}
-          style={[
-            styles.settingItem,
-            { borderBottomColor: colors.border },
-            isEffectivelyDisabled && { opacity: 0.4 },
-          ]}
-        >
-          <Text
-            style={[
-              styles.settingName,
-              { color: colors.textSecondary },
-              isIosMultiColumn && styles.iosMultiColumnSettingName,
-            ]}
-            numberOfLines={isIosMultiColumn ? 1 : undefined}
-            ellipsizeMode={isIosMultiColumn ? 'tail' : undefined}
-          >
-            {getSettingName(
-              id,
-              cameraModel,
-              displayPresetId,
-              displaySettings[GoProSettingId.MEDIA_FORMAT],
-            )}
-          </Text>
-          <View style={isIosMultiColumn ? styles.iosMultiColumnControlGroup : undefined}>
-            <Switch
-              value={isOn}
-              onValueChange={(val) => void handleChangeValue(id, val ? boolOnValue : boolOffValue)}
-              trackColor={{ false: colors.switchTrackOff, true: colors.switchTrackOn }}
-              thumbColor={'#ffffff'}
-              disabled={currentValue === undefined || isEffectivelyDisabled}
-            />
-          </View>
-        </View>
-      );
-    }
-
-    const canOpenModal = allowedValues.length > 0;
     return (
-      <TouchableOpacity
+      <OtherSettingRow
         key={id}
-        style={[
-          styles.settingItem,
-          { borderBottomColor: colors.border },
-          isEffectivelyDisabled && { opacity: 0.4 },
-        ]}
-        onPress={() => handleSelectSetting(id)}
-        disabled={isEffectivelyDisabled}
-      >
-        <Text
-          style={[styles.settingName, { color: colors.textSecondary, flex: 1 }]}
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          {getSettingName(
-            id,
-            cameraModel,
-            displayPresetId,
-            displaySettings[GoProSettingId.MEDIA_FORMAT],
-          )}
-        </Text>
-        <Text
-          style={[
-            styles.settingValue,
-            {
-              color: isCapabilityDisabled ? colors.textMuted : colors.accent,
-              flexShrink: 0,
-              marginLeft: 4,
-            },
-          ]}
-        >
-          {canOpenModal
-            ? currentValue !== undefined
-              ? getSettingValueNameForModelWithContext(
-                  id,
-                  currentValue,
-                  cameraModel,
-                  { settings: displaySettings },
-                  firmwareVersion,
-                )
-              : '---'
-            : currentValue !== undefined
-              ? getSettingValueNameForModelWithContext(
-                  id,
-                  currentValue,
-                  cameraModel,
-                  { settings: displaySettings },
-                  firmwareVersion,
-                )
-              : t('common.loading')}
-        </Text>
-      </TouchableOpacity>
+        id={id}
+        settings={settings}
+        pendingSettings={pendingSettings}
+        displaySettings={displaySettings}
+        capabilities={capabilities}
+        allowedValues={getFilteredSelectableValues(id)}
+        cameraModel={cameraModel}
+        displayPresetId={displayPresetId}
+        firmwareVersion={firmwareVersion}
+        isRefreshing={isRefreshing}
+        mediaModMicStatus={mediaModMicStatus}
+        isMediaModConnected={isMediaModConnected}
+        isIosMultiColumn={isIosMultiColumn}
+        colors={colors}
+        onSelectSetting={handleSelectSetting}
+        onChangeValue={handleChangeValue}
+      />
     );
   };
 
@@ -1430,7 +1026,6 @@ export const SettingsPanel = () => {
 
   const hasPendingSettings = Object.keys(pendingSettings).length > 0;
   const isUiLocked = shootingLocked || isRefreshing || hasPendingSettings || isApplyingCustomPreset;
-  const isIosMultiColumn = Platform.OS === 'ios' && columnCount > 1;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
@@ -1707,70 +1302,18 @@ export const SettingsPanel = () => {
       </View>
 
       {/* Value Selection Modal */}
-      <Modal
-        visible={selectedSettingId !== null}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setSelectedSettingId(null)}
-      >
-        <View style={styles.modalContainer}>
-          <TouchableOpacity
-            style={[StyleSheet.absoluteFill, styles.modalOverlayBg]}
-            activeOpacity={1}
-            onPress={() => setSelectedSettingId(null)}
-          />
-          <View style={[styles.modalContent, { backgroundColor: colors.modalBg }]}>
-            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
-              {selectedSettingId
-                ? getSettingName(
-                    selectedSettingId,
-                    cameraModel,
-                    displayPresetId,
-                    displaySettings[GoProSettingId.MEDIA_FORMAT],
-                  )
-                : ''}
-            </Text>
-            <FlatList
-              data={selectedSettingId ? getFilteredSelectableValues(selectedSettingId) : []}
-              keyExtractor={(item) => item.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[styles.modalOption, { borderBottomColor: colors.borderLight }]}
-                  onPress={() => selectedSettingId && handleChangeValue(selectedSettingId, item)}
-                >
-                  <Text
-                    style={[
-                      styles.modalOptionText,
-                      { color: colors.textPrimary },
-                      selectedSettingId && settings[selectedSettingId] === item
-                        ? [styles.modalOptionSelected, { color: colors.accent }]
-                        : null,
-                    ]}
-                  >
-                    {selectedSettingId
-                      ? getSettingValueNameForModelWithContext(
-                          selectedSettingId,
-                          item,
-                          cameraModel,
-                          { settings: displaySettings },
-                          firmwareVersion,
-                        )
-                      : item}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            />
-            <TouchableOpacity
-              style={[styles.modalClose, { backgroundColor: colors.surfaceSecondary }]}
-              onPress={() => setSelectedSettingId(null)}
-            >
-              <Text style={[styles.modalCloseText, { color: colors.danger }]}>
-                {t('common.cancel')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <SettingOptionModal
+        selectedSettingId={selectedSettingId}
+        onClose={() => setSelectedSettingId(null)}
+        onSelectValue={handleChangeValue}
+        selectableValues={selectedSettingId ? getFilteredSelectableValues(selectedSettingId) : []}
+        currentValue={selectedSettingId !== null ? settings[selectedSettingId] : undefined}
+        cameraModel={cameraModel}
+        displayPresetId={displayPresetId}
+        displaySettings={displaySettings}
+        firmwareVersion={firmwareVersion}
+        colors={colors}
+      />
 
       <VisibilityControlModal
         visible={isVisibilityModalVisible}

@@ -54,11 +54,11 @@ export { GOPRO_SETTING_VALUE_ORDER } from './metadata/baseValueOrder';
 
 export type { SettingMetadata, SliderConfig } from './metadata/types';
 
-type SettingValueComparisonContext = {
+export interface SettingValueComparisonContext {
   modelKey?: string | null;
   modelNo?: number | null;
   firmwareVersion?: string | null;
-};
+}
 
 type SettingValueAliasRule = {
   settingId: number;
