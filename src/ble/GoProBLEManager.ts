@@ -112,6 +112,21 @@ import {
   INCOMING_SETTING_SYNC_RULES,
 } from '../constants/settingIdAliases';
 import { buildGoProPacketChunks, parseHardwareInfo } from './GoProPacketCodec';
+import {
+  buildShutterPacket,
+  buildLoadPresetPacket,
+  buildLoadPresetGroupPacket,
+  buildSetSettingPacket,
+  buildSetDateTimePacket,
+  buildSetAutoOffPacket,
+  buildClearAutoOffPacket,
+  buildSetHighlightPointPacket,
+  buildSetAPControlPacket,
+  buildKeepAlivePacket,
+  buildFetchHardwareInfoPacket,
+  buildFetchPresetStatusPacket,
+  buildCustomPresetUpdatePacket,
+} from './bleCommandPackets';
 import { buildCapabilityCacheKey } from './capabilityCacheKey';
 import * as CapabilityPlanning from './capabilityPlanning';
 
@@ -1474,7 +1489,7 @@ class GoProBLEManager {
     if (!conn) return null;
 
     try {
-      const base64Str = Buffer.from([0x01, 0x3c]).toString('base64');
+      const base64Str = Buffer.from(buildFetchHardwareInfoPacket()).toString('base64');
       return new Promise<HardwareInfo | null>((resolve) => {
         const timer = setTimeout(() => {
           conn.pendingHardwareInfoResolver = null;
@@ -1556,7 +1571,7 @@ class GoProBLEManager {
     const conn = this.connections.get(targetId);
     if (!conn || !conn.connectedDevice) return;
     try {
-      const packet = [0x03, 0x17, 0x01, 0x01];
+      const packet = buildSetAPControlPacket();
       const base64Str = Buffer.from(packet).toString('base64');
       await conn.connectedDevice.writeCharacteristicWithResponseForService(
         GOPRO_SERVICE,
@@ -1660,20 +1675,8 @@ class GoProBLEManager {
           const bleModelNo = selectCameraStateFor(useGoProStore.getState(), targetId).hardwareInfo
             ?.modelNo;
           const bleSetting = resolveOutgoingBleSettingId(settingId, bleModelNo);
-          let packet: number[];
-          if (FOUR_BYTE_SETTING_IDS.has(bleSetting)) {
-            packet = [
-              0x06,
-              bleSetting,
-              0x04,
-              (value >>> 24) & 0xff,
-              (value >>> 16) & 0xff,
-              (value >>> 8) & 0xff,
-              value & 0xff,
-            ];
-          } else {
-            packet = [0x03, bleSetting, 0x01, value];
-          }
+          const isFourByte = FOUR_BYTE_SETTING_IDS.has(bleSetting);
+          const packet = buildSetSettingPacket(bleSetting, value, isFourByte);
           const base64Str = Buffer.from(packet).toString('base64');
           await conn.connectedDevice.writeCharacteristicWithResponseForService(
             GOPRO_SERVICE,
@@ -1718,8 +1721,7 @@ class GoProBLEManager {
       await conn.commandQueue.enqueue(
         async () => {
           if (!conn || !conn.connectedDevice) return;
-          const encodedMinute = minute * 4 + 3;
-          const packet = [0x06, 0xa8, 0x04, 0x00, 0x00, hour, encodedMinute];
+          const packet = buildSetAutoOffPacket(hour, minute);
           const base64Str = Buffer.from(packet).toString('base64');
           await conn.connectedDevice.writeCharacteristicWithResponseForService(
             GOPRO_SERVICE,
@@ -1748,7 +1750,7 @@ class GoProBLEManager {
       await conn.commandQueue.enqueue(
         async () => {
           if (!conn || !conn.connectedDevice) return;
-          const packet = [0x06, 0xa8, 0x04, 0x00, 0x00, 0x00, 0x00];
+          const packet = buildClearAutoOffPacket();
           const base64Str = Buffer.from(packet).toString('base64');
           await conn.connectedDevice.writeCharacteristicWithResponseForService(
             GOPRO_SERVICE,
@@ -1784,62 +1786,8 @@ class GoProBLEManager {
           if (!conn || !conn.connectedDevice) return;
 
           const now = new Date();
-          let packet: number[];
-
-          if (isHero11OrNewerModel(modelNo)) {
-            // Send UTC time and correct display time using timezone offset
-            const utcYear = now.getUTCFullYear();
-            const utcMonth = now.getUTCMonth() + 1;
-            const utcDay = now.getUTCDate();
-            const utcHour = now.getUTCHours();
-            const utcMin = now.getUTCMinutes();
-            const utcSec = now.getUTCSeconds();
-
-            // getTimezoneOffset() returns difference from UTC in minutes (UTC+9 -> -540)
-            // Legacy app: intValue = utcOffsetMinutes + 60 (big-endian int16)
-            const utcOffsetMinutes = -now.getTimezoneOffset();
-            const offsetValue = utcOffsetMinutes + 60;
-            const ofH = (offsetValue >> 8) & 0xff;
-            const ofL = offsetValue & 0xff;
-
-            packet = [
-              0x0c,
-              0x0f,
-              0x0a,
-              (utcYear >> 8) & 0xff,
-              utcYear & 0xff,
-              utcMonth,
-              utcDay,
-              utcHour,
-              utcMin,
-              utcSec,
-              ofH,
-              ofL,
-              0x01, // UTC enabled
-            ];
-          } else {
-            // Send local time directly
-            const year = now.getFullYear();
-            const month = now.getMonth() + 1;
-            const day = now.getDate();
-            const hour = now.getHours();
-            const min = now.getMinutes();
-            const sec = now.getSeconds();
-
-            packet = [
-              0x09,
-              0x0d,
-              0x07,
-              (year >> 8) & 0xff,
-              year & 0xff,
-              month,
-              day,
-              hour,
-              min,
-              sec,
-            ];
-          }
-
+          const isHero11OrNewer = isHero11OrNewerModel(modelNo);
+          const packet = buildSetDateTimePacket(now, isHero11OrNewer);
           const base64Str = Buffer.from(packet).toString('base64');
           await conn.connectedDevice.writeCharacteristicWithResponseForService(
             GOPRO_SERVICE,
@@ -2108,7 +2056,7 @@ class GoProBLEManager {
     if (!conn) return [];
 
     const protobufPayload = encodeRequestGetPresetStatus();
-    const cmd = [0xf5, 0x72, ...protobufPayload];
+    const cmd = buildFetchPresetStatusPacket(protobufPayload);
 
     return new Promise<GoProPresetGroupData[]>((resolve, reject) => {
       const TIMEOUT_MS = BLE_EXTENDED_NOTIFICATION_TIMEOUT_MS;
@@ -2164,7 +2112,7 @@ class GoProBLEManager {
       customName: trimmed,
       iconId,
     });
-    const cmd = [0xf1, 0x64, ...protobufPayload];
+    const cmd = buildCustomPresetUpdatePacket(protobufPayload);
 
     return new Promise<boolean>((resolve) => {
       const TIMEOUT_MS = BLE_PRESET_UPDATE_TIMEOUT_MS;
@@ -2214,7 +2162,7 @@ class GoProBLEManager {
       await conn.commandQueue.enqueue(
         async () => {
           if (!conn.connectedDevice) return;
-          const packet = [0x03, 0x01, 0x01, isStart ? 0x01 : 0x00];
+          const packet = buildShutterPacket(isStart);
           const base64Str = Buffer.from(packet).toString('base64');
           await conn.connectedDevice.writeCharacteristicWithResponseForService(
             GOPRO_SERVICE,
@@ -2260,11 +2208,7 @@ class GoProBLEManager {
             debugDebug('ble', `[BLE] skip already-active loadPreset(${presetId})`);
             return;
           }
-          const b3 = (presetId >>> 24) & 0xff;
-          const b2 = (presetId >>> 16) & 0xff;
-          const b1 = (presetId >>> 8) & 0xff;
-          const b0 = presetId & 0xff;
-          const packet = [0x06, 0x40, 0x04, b3, b2, b1, b0];
+          const packet = buildLoadPresetPacket(presetId);
           const base64Str = Buffer.from(packet).toString('base64');
           await conn.connectedDevice.writeCharacteristicWithResponseForService(
             GOPRO_SERVICE,
@@ -2318,7 +2262,7 @@ class GoProBLEManager {
       await conn.commandQueue.enqueue(
         async () => {
           if (!conn || !conn.connectedDevice) return;
-          const packet = [0x04, 0x3e, 0x02, 0x03, selectId];
+          const packet = buildLoadPresetGroupPacket(selectId);
           const base64Str = Buffer.from(packet).toString('base64');
           await conn.connectedDevice.writeCharacteristicWithResponseForService(
             GOPRO_SERVICE,
@@ -2388,7 +2332,7 @@ class GoProBLEManager {
         async () => {
           if (!conn || !conn.connectedDevice) return;
           // BLE CMD Request: [len=2, 0x69, p]
-          const packet = [0x02, 0x69, p];
+          const packet = buildSetHighlightPointPacket(p);
           const base64Str = Buffer.from(packet).toString('base64');
           await conn.connectedDevice.writeCharacteristicWithResponseForService(
             GOPRO_SERVICE,
@@ -2454,11 +2398,11 @@ class GoProBLEManager {
           this.handleDisconnectedToTop(conn.deviceId);
           return;
         }
-        // Base64 encode [0x01, 0x00] -> 'AQA='
+        const keepAliveBase64 = Buffer.from(buildKeepAlivePacket()).toString('base64');
         await conn.connectedDevice.writeCharacteristicWithResponseForService(
           GOPRO_SERVICE,
           CMD_SEND,
-          'AQA=',
+          keepAliveBase64,
         );
         conn.keepAliveFailureCount = 0;
       } catch (e) {
@@ -2493,10 +2437,11 @@ class GoProBLEManager {
         this.handleDisconnectedToTop(targetId);
         return false;
       }
+      const keepAliveBase64 = Buffer.from(buildKeepAlivePacket()).toString('base64');
       await conn.connectedDevice.writeCharacteristicWithResponseForService(
         GOPRO_SERVICE,
         CMD_SEND,
-        'AQA=',
+        keepAliveBase64,
       );
       conn.keepAliveFailureCount = 0;
       return true;
