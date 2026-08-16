@@ -25,7 +25,8 @@ import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import { useTranslation } from 'react-i18next';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import type { NavigationProp, ParamListBase } from '@react-navigation/native';
-import { useGoProStore } from '../store/GoProStore';
+import { useGoProStore, useCameraState } from '../store/GoProStore';
+import { useShallow } from 'zustand/react/shallow';
 import { goProBle } from '../ble/GoProBLEManager';
 import { CameraStatusBar } from './CameraStatusBar';
 import { SwipeableItem } from './SwipeableItem';
@@ -77,10 +78,14 @@ export const DeviceItem = React.memo<DeviceItemProps>(
     const isConnected = useGoProStore(
       (state) => state.deviceConnectionStatuses[item.id] === 'connected',
     );
-    const cameraState = useGoProStore((state) => state.cameraStates[item.id]);
-
-    const isEncoding = cameraState?.isEncoding ?? false;
-    const recordingTimeSec = cameraState?.recordingTimeSec ?? 0;
+    const { hasState, isEncoding, recordingTimeSec } = useCameraState(
+      item.id,
+      useShallow((cs) => ({
+        hasState: cs !== undefined,
+        isEncoding: cs.isEncoding ?? false,
+        recordingTimeSec: cs.recordingTimeSec ?? 0,
+      })),
+    );
 
     let statusText = t('home.offline');
     let statusColor = colors.textMuted;
@@ -211,7 +216,7 @@ export const DeviceItem = React.memo<DeviceItemProps>(
           </TouchableOpacity>
 
           {/* Status & Control Bar */}
-          {isConnected && cameraState && (
+          {isConnected && hasState && (
             <View style={[styles.cardStatusControlRow, { borderTopColor: colors.border }]}>
               <CameraStatusBar
                 deviceId={item.id}

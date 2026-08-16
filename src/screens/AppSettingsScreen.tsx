@@ -36,6 +36,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useNavigation, type NavigationProp, type ParamListBase } from '@react-navigation/native';
 import { useGoProStore } from '../store/GoProStore';
+import { useShallow } from 'zustand/react/shallow';
 import { setAppSetting } from '../device/AppSettingsRepository';
 import { clearAllPresetMetaCaches } from '../device/PresetMetaCacheRepository';
 import { getThemeColors, AppTheme } from '../constants/Theme';
@@ -76,32 +77,63 @@ const LANGUAGE_OPTIONS: { key: AppLocale; labelKey: string }[] = [
 export const AppSettingsScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
-  const columnCount = useGoProStore((state) => state.columnCount);
-  const theme = useGoProStore((state) => state.theme);
-  const appLanguage = useGoProStore((state) => state.appLanguage);
-  const purchasedProducts = useGoProStore((state) => state.purchasedProducts);
-  const bypassCapabilityCache = useGoProStore((state) => state.bypassCapabilityCache);
-  const debugLogBle = useGoProStore((state) => state.debugLogBle);
-  const debugLogBleCache = useGoProStore((state) => state.debugLogBleCache);
-  const debugLogBlePreset = useGoProStore((state) => state.debugLogBlePreset);
-  const debugLogBleAsync = useGoProStore((state) => state.debugLogBleAsync);
-  const debugLogBleQueue = useGoProStore((state) => state.debugLogBleQueue);
-  const debugLogWifi = useGoProStore((state) => state.debugLogWifi);
-  const debugLogIap = useGoProStore((state) => state.debugLogIap);
-  const autoNavigateToControl = useGoProStore((state) => state.autoNavigateToControl);
-  const deviceConnectionStatuses = useGoProStore((state) => state.deviceConnectionStatuses);
-  const setColumnCount = useGoProStore((state) => state.setColumnCount);
-  const setAutoNavigateToControl = useGoProStore((state) => state.setAutoNavigateToControl);
-  const setTheme = useGoProStore((state) => state.setTheme);
-  const setAppLanguage = useGoProStore((state) => state.setAppLanguage);
-  const setBypassCapabilityCache = useGoProStore((state) => state.setBypassCapabilityCache);
-  const setDebugLogBle = useGoProStore((state) => state.setDebugLogBle);
-  const setDebugLogBleCache = useGoProStore((state) => state.setDebugLogBleCache);
-  const setDebugLogBlePreset = useGoProStore((state) => state.setDebugLogBlePreset);
-  const setDebugLogBleAsync = useGoProStore((state) => state.setDebugLogBleAsync);
-  const setDebugLogBleQueue = useGoProStore((state) => state.setDebugLogBleQueue);
-  const setDebugLogWifi = useGoProStore((state) => state.setDebugLogWifi);
-  const setDebugLogIap = useGoProStore((state) => state.setDebugLogIap);
+  const {
+    columnCount,
+    theme,
+    appLanguage,
+    purchasedProducts,
+    bypassCapabilityCache,
+    debugLogBle,
+    debugLogBleCache,
+    debugLogBlePreset,
+    debugLogBleAsync,
+    debugLogBleQueue,
+    debugLogWifi,
+    debugLogIap,
+    autoNavigateToControl,
+    deviceConnectionStatuses,
+    setColumnCount,
+    setAutoNavigateToControl,
+    setTheme,
+    setAppLanguage,
+    setBypassCapabilityCache,
+    setDebugLogBle,
+    setDebugLogBleCache,
+    setDebugLogBlePreset,
+    setDebugLogBleAsync,
+    setDebugLogBleQueue,
+    setDebugLogWifi,
+    setDebugLogIap,
+  } = useGoProStore(
+    useShallow((state) => ({
+      columnCount: state.columnCount,
+      theme: state.theme,
+      appLanguage: state.appLanguage,
+      purchasedProducts: state.purchasedProducts,
+      bypassCapabilityCache: state.bypassCapabilityCache,
+      debugLogBle: state.debugLogBle,
+      debugLogBleCache: state.debugLogBleCache,
+      debugLogBlePreset: state.debugLogBlePreset,
+      debugLogBleAsync: state.debugLogBleAsync,
+      debugLogBleQueue: state.debugLogBleQueue,
+      debugLogWifi: state.debugLogWifi,
+      debugLogIap: state.debugLogIap,
+      autoNavigateToControl: state.autoNavigateToControl,
+      deviceConnectionStatuses: state.deviceConnectionStatuses,
+      setColumnCount: state.setColumnCount,
+      setAutoNavigateToControl: state.setAutoNavigateToControl,
+      setTheme: state.setTheme,
+      setAppLanguage: state.setAppLanguage,
+      setBypassCapabilityCache: state.setBypassCapabilityCache,
+      setDebugLogBle: state.setDebugLogBle,
+      setDebugLogBleCache: state.setDebugLogBleCache,
+      setDebugLogBlePreset: state.setDebugLogBlePreset,
+      setDebugLogBleAsync: state.setDebugLogBleAsync,
+      setDebugLogBleQueue: state.setDebugLogBleQueue,
+      setDebugLogWifi: state.setDebugLogWifi,
+      setDebugLogIap: state.setDebugLogIap,
+    })),
+  );
   const { width } = useWindowDimensions();
   const maxColumns = getMaxColumns(width);
   const [isRestoring, setIsRestoring] = useState(false);

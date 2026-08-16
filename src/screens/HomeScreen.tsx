@@ -42,6 +42,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import type { Device } from 'react-native-ble-plx';
 import { useGoProStore } from '../store/GoProStore';
+import { useShallow } from 'zustand/react/shallow';
 import { goProBle } from '../ble/GoProBLEManager';
 import { debugLog, debugWarn } from '../utils/debugLogging';
 import { haptics } from '../utils/haptics';
@@ -72,10 +73,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const hasAutoScannedRef = useRef(false);
 
   // Zustand States
-  const connectionStatus = useGoProStore((state) => state.connectionStatus);
-  const deviceConnectionStatuses = useGoProStore((state) => state.deviceConnectionStatuses);
-  const bluetoothState = useGoProStore((state) => state.bluetoothState);
-  const theme = useGoProStore((state) => state.theme);
+  const { connectionStatus, deviceConnectionStatuses, bluetoothState, theme } = useGoProStore(
+    useShallow((state) => ({
+      connectionStatus: state.connectionStatus,
+      deviceConnectionStatuses: state.deviceConnectionStatuses,
+      bluetoothState: state.bluetoothState,
+      theme: state.theme,
+    })),
+  );
   const colors = useMemo(() => getThemeColors(theme), [theme]);
 
   const connectedCount = useMemo(() => {
@@ -86,7 +91,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const anyRecording = useGoProStore((state) => {
     return Object.keys(state.deviceConnectionStatuses).some((id) => {
       return (
-        state.deviceConnectionStatuses[id] === 'connected' && state.cameraStates[id]?.isEncoding
+        state.deviceConnectionStatuses[id] === 'connected' &&
+        Boolean(state.cameraStates[id]?.isEncoding)
       );
     });
   });
