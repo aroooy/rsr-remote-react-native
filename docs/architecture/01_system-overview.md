@@ -27,57 +27,64 @@ GoPro カメラを BLE (Bluetooth Low Energy) で遠隔操作する React Native
 ```
 ┌─────────────────────────────────────────────┐
 │  UI Layer                                   │
-│  App.js          — ナビゲーション             │
-│  SettingsPanel   — 設定UIの安定 facade        │
-│  PreviewPlayer   — ライブプレビューモーダル   │
+│  App.js                — ナビゲーション      │
+│  SettingsPanel         — 設定UIの安定 facade  │
+│  settingsPanel/*       — UIサブコンポーネント │
+│  PreviewPlayer         — ライブプレビュー    │
 ├─────────────────────────────────────────────┤
 │  State Layer                                │
-│  GoProStore      — Zustand グローバルストア   │
+│  GoProStore & slices/  — Slice別Zustandストア │
 ├─────────────────────────────────────────────┤
 │  Facade / Resolver Layer                    │
-│  settingsPanel/*  — UI helper facade         │
-│  *LayoutResolver  — runtime override 解決    │
-│  cameraModels/*   — 機種別 resolver 実体      │
+│  *LayoutResolver             — runtime layout 解決 │
+│  cameraModels/shared/modelManifest — 機種別 resolver 統合 │
+│  cameraModels/*              — 機種固有 resolver    │
 ├─────────────────────────────────────────────┤
 │  Constants Layer                            │
-│  GoProSettingIds  — 設定ID定数, base layout   │
-│  GoProMetadata    — 値名マッピング, ソート順  │
+│  GoProSettingIds       — 設定ID定数, base     │
+│  GoProMetadata         — メタデータマッピング │
+│  Timeouts              — タイムアウト・定数   │
 ├─────────────────────────────────────────────┤
 │  Network & BLE Layer                        │
-│  GoProBLEManager  — BLE接続/通信/コマンド    │
-│  GoProWiFiManager — Wi-Fi接続/UDPストリーム管理 │
-│  PacketParser     — TLVパケット再組立・解析  │
-│  PresetProtobuf   — Protobuf enc/dec        │
+│  GoProBLEManager       — BLE接続・管理        │
+│  bleCommandPackets     — パケット構築        │
+│  bleResponseCodec      — パケット解析        │
+│  bleErrorHandler       — BLEエラー統合ハンドラ│
+│  capabilityManager     — ケーパビリティ評価   │
+│  commandQueueRules     — コマンド判定ルール  │
+│  GoProWiFiManager      — Wi-Fi接続・ストリーム│
+│  PresetProtobuf        — Protobuf enc/dec   │
 ├─────────────────────────────────────────────┤
 │  Persistence Layer                          │
 │  KnownDeviceRepository         — 既知デバイスDB │
 │  SettingVisibilityRepository   — 表示設定DB    │
+│  CapabilityCacheRepository     — キャッシュDB  │
 └─────────────────────────────────────────────┘
 ```
 
 ## データフロー
 
 ```
-BLE Notify → PacketParser (TLV/Protobuf解析) → GoProStore (Zustand) → SettingsPanel (React)
-                                                                          │
-                                                                          ↓ ユーザー操作
-                                                              GoProBLEManager.setSetting()
-                                                                          │
-                                                                          ↓
-                                                                BLE Write → カメラ
+BLE Notify → bleResponseCodec (TLV/Protobuf解析) → GoProStore (Zustand Slices) → SettingsPanel (React)
+                                                                                       │
+                                                                                       ↓ ユーザー操作
+                                                                           GoProBLEManager.setSetting()
+                                                                                       │
+                                                                                       ↓
+                                                                             BLE Write → カメラ
 ```
 
 ### 設定値の読み取りフロー
 
 1. 接続完了後 `GoProBLEManager` が Bootstrap クエリを送信
-2. カメラからの BLE Notify を `PacketParser.processQueryResponse()` が TLV 解析
-3. 設定値 (`settings`) と利用可能値 (`capabilities`) を `GoProStore` にバッチ更新
+2. カメラからの BLE Notify を `bleResponseCodec.parseQueryResponse()` が TLV 解析
+3. 設定値 (`settings`) と利用可能値 (`capabilities`) を `GoProStore` (cameraStateSlice) にバッチ更新
 4. `SettingsPanel` が Zustand の `useShallow` セレクタで差分レンダリング
 
 ### 設定値の書き込みフロー
 
 1. ユーザーがモーダルで値を選択
-2. `goProBle.setSetting(settingId, value)` で BLE 書き込み
+2. `goProBle.setSetting(settingId, value)` で BLE 書き込み（`bleCommandPackets` でバイナリ構築）
 3. カメラが設定変更通知を BLE Notify で返す
 4. 「読み取りフロー」と同じ経路で UI 更新
 
@@ -86,13 +93,29 @@ BLE Notify → PacketParser (TLV/Protobuf解析) → GoProStore (Zustand) → Se
 ```
 src/
   ble/
-    GoProBLEManager.ts        — BLE通信シングルトン (~450行)
-    PacketParser.ts           — パケット再組立・TLV解析 (~220行)
-    PresetProtobuf.ts         — Protobuf手書き enc/dec (~260行)
+    GoProBLEManager.ts        — BLE通信・オーケストレーション
+    bleCommandPackets.ts      — バイナリコマンドパケット構築
+    bleResponseCodec.ts       — TLV/Protobuf応答・通知デコード
+    bleErrorHandler.ts        — BLEエラー分類・復旧ハンドラ
+    capabilityManager.ts      — ケーパビリティ評価・計画・比較
+    capabilityPlanning.ts     — ケーパビリティ再取得プラン生成
+    commandQueueRules.ts      — コマンドキューのゲーティング判定
+    CommandQueue.ts           — コマンド実行キュー
+    PacketParser.ts           — 低レイヤーヘッダ解析・バッファ処理
+    PresetProtobuf.ts         — Protobuf手書き enc/dec
   components/
     SettingsPanel.tsx          — メインUIと orchestration
     PreviewPlayer.tsx          — ライブプレビュー(VLC)再生モーダル
     settingsPanel/
+      PrimarySettingRow.tsx    — Primary Setting 行
+      SpecialRowView.tsx       — Easy Mode / Special Row コンポーネント
+      SettingOptionModal.tsx   — 設定値選択モーダル
+      OtherSettingRow.tsx      — Other Setting 1行コンポーネント
+      ResolutionFramingSection.tsx — 解像度・アスペクト比セクション
+      SettingsSectionGroup.tsx — 設定グループ枠
+      ShutterButtonRow.tsx     — シャッター・録画コントロール行
+      PresetGroupGrid.tsx      — プリセットグループ切り替え
+      VisibilityControlModal.tsx — 表示項目切り替えモーダル
       framingSelector.ts       — framing row facade
       resolutionSelector.ts    — resolution row facade
       otherItemState.ts        — renderOtherItem state facade
@@ -100,6 +123,7 @@ src/
   constants/
     GoProSettingIds.ts         — 設定ID・base layout・group builder facade
     GoProMetadata.ts           — メタデータ・値名マッピング facade
+    Timeouts.ts                — タイムアウト・デバウンス・定数集中管理
     displayLayoutResolver.ts   — top-level layout override facade
     videoLayoutResolver.ts     — video layout override facade
     photoLayoutState.ts        — photo layout state facade
@@ -107,21 +131,29 @@ src/
     PresetIconMap.ts           — EnumPresetIcon → Ionicons マッピング / アイコン候補セット
     ResolutionAspectMap.ts     — 機種別 RESOLUTION 完全マップ / アスペクト比 remap
   cameraModels/
-    shared/                    — dispatcher / shared types / helper constants, displayPreset.ts (ベースプリセットID解決ヘルパー)
+    shared/                    — modelManifest.ts (全カメラモデルの実装マニフェスト・登録), dispatcher / shared types / helper constants, displayPreset.ts
     hero09/ ... max/           — 機種別 resolver 実装
   device/
-    GoProDeviceFilter.ts       — BLE名フィルタ (~6行)
-    KnownDeviceRepository.ts   — 既知デバイスDB CRUD (~85行)
-    SettingVisibilityRepository.ts — 表示設定DB CRUD (~75行)
+    GoProDeviceFilter.ts       — BLE名フィルタ
+    KnownDeviceRepository.ts   — 既知デバイスDB CRUD
+    SettingVisibilityRepository.ts — 表示設定DB CRUD
     PresetMetaCacheRepository.ts   — プリセットメタ永続キャッシュ CRUD
     CapabilityCacheRepository.ts   — ケーパビリティキャッシュ永続化
     CustomPresetRepository.ts      — カスタムプリセットスナップショット保存
   network/
-    GoProWiFiManager.ts        — Wi-Fi AP管理およびストリーミング要求 (~110行)
+    GoProWiFiManager.ts        — Wi-Fi AP管理およびストリーミング要求
   store/
-    GoProStore.ts              — Zustand ストア定義 (~95行)
+    GoProStore.ts              — Zustand ストア結合・統一エクスポート
+    storeTypes.ts              — ストア共通型定義
+    slices/
+      connectionSlice.ts       — BLE/WiFi 接続状態管理
+      cameraStateSlice.ts      — カメラ設定・Capabilities・ステータス管理
+      presetSlice.ts           — プリセット一覧・カスタムプリセット管理
+      uiSettingsSlice.ts       — UI表示状態・トースト管理
+  utils/
+    debugLogging.ts            — デバッグログ出力基盤 (Providerパターン)
   types/
-    KnownDevice.ts             — デバイス・HardwareInfo 型定義 (~35行)
+    KnownDevice.ts             — デバイス・HardwareInfo 型定義
 App.js                         — エントリポイント・ナビゲーション (~290行)
 ```
 

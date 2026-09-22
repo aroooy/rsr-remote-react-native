@@ -10,17 +10,20 @@
 
 ### UI 側の入口
 
-- `src/components/SettingsPanel.tsx`: orchestration と generic renderer
-- `src/components/settingsPanel/*.ts`: UI helper facade
+- `src/components/SettingsPanel.tsx`: UI オーケストレーションと状態バインディング
+- `src/components/settingsPanel/*.tsx`: UI サブコンポーネント (`PrimarySettingRow`, `OtherSettingRow`, `SpecialRowView` 等)
+- `src/components/settingsPanel/*.ts`: UI helper facade (`framingSelector`, `resolutionSelector` 等)
 
 ### 定数 / レイアウト側の入口
 
 - `src/constants/GoProSettingIds.ts`: setting ID、base layout、group builder facade
 - `src/constants/displayLayoutResolver.ts`, `videoLayoutResolver.ts`: full-layout resolver facade
 - `src/constants/photoLayoutState.ts`, `timelapseLayoutState.ts`: state resolver facade
+- `src/constants/Timeouts.ts`: タイムアウト・デバウンス定数
 
 ### 実体の置き場所
 
+- `src/cameraModels/shared/modelManifest.ts`: カメラモデルマニフェスト・全モデル統合登録
 - `src/cameraModels/shared/*.ts`: dispatcher, shared helper, shared types
 - `src/cameraModels/<model>/*.ts`: per-model resolver
 

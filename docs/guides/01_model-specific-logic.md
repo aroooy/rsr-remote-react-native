@@ -22,10 +22,11 @@
 
 ### model-specific 実装の実体
 
-- `src/components/settingsPanel/*.ts`: UI helper facade
-- `src/constants/displayLayoutResolver.ts`, `videoLayoutResolver.ts`, `photoLayoutState.ts`, `timelapseLayoutState.ts`
-- `src/cameraModels/shared/*.ts`: dispatcher と shared types
-- `src/cameraModels/<model>/*.ts`: per-model resolver
+- `src/cameraModels/shared/modelManifest.ts`: 全機種のメタデータ・機能フラグ・レイアウト resolver の集中登録マニフェスト
+- `src/cameraModels/shared/*.ts`: dispatcher, shared types, ベースプリセット ID 解決ヘルパー (`displayPreset.ts`)
+- `src/cameraModels/<model>/*.ts`: per-model resolver (機種固有レイアウト・制約実装)
+- `src/components/settingsPanel/*.tsx`: UI サブコンポーネント (モジュール分割) および helper facade (`framingSelector.ts`, `resolutionSelector.ts` 等)
+- `src/constants/displayLayoutResolver.ts`, `videoLayoutResolver.ts`, `photoLayoutState.ts`, `timelapseLayoutState.ts`: 各種レイアウト resolver facade
 
 ### facade に残す責務の推奨境界
 

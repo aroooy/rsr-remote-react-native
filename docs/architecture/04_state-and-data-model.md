@@ -1,58 +1,84 @@
 # 状態管理とデータモデル
 
 ## 対象ファイル
-- [src/store/GoProStore.ts](../../src/store/GoProStore.ts)
+- [src/store/GoProStore.ts](../../src/store/GoProStore.ts) — 統一エクスポート・結合ストア定義
+- [src/store/storeTypes.ts](../../src/store/storeTypes.ts) — ストア共通型定義
+- [src/store/slices/connectionSlice.ts](../../src/store/slices/connectionSlice.ts) — BLE/Wi-Fi 接続状態・ハードウェア情報 Slice
+- [src/store/slices/cameraStateSlice.ts](../../src/store/slices/cameraStateSlice.ts) — カメラ設定・Capabilities・ステータス・Pending状態 Slice
+- [src/store/slices/presetSlice.ts](../../src/store/slices/presetSlice.ts) — プリセット一覧・カスタムプリセット・ベースプリセット ID Slice
+- [src/store/slices/uiSettingsSlice.ts](../../src/store/slices/uiSettingsSlice.ts) — アクティブ画面・表示項目・トースト通知 Slice
 - [src/types/KnownDevice.ts](../../src/types/KnownDevice.ts)
 - [src/device/CapabilityCacheRepository.ts](../../src/device/CapabilityCacheRepository.ts)
 - [src/device/PresetMetaCacheRepository.ts](../../src/device/PresetMetaCacheRepository.ts)
 
-## Zustand ストア (GoProStore)
+## Zustand ストア (GoProStore) と Slice パターン
 
-アプリ全体の状態を管理する単一ストア。BLE 通知、UI の optimistic state、SQLite 復元結果をここへ集約する。
+アプリ全体の状態を管理するグローバルストア。単一ファイル化による保守性低下を防ぐため、機能ドメインごとに 4 つの Slice に分割され、`GoProStore.ts` で結合してエクスポートしている。
+
+### マルチデバイス構造 (`CameraSpecificState`)
+
+本アプリのストアは単一カメラの状態だけでなく、複数のカメラを切り替えて操作できる **マルチデバイス構造** を採用している。
+
+- **アプリ共通状態 (トップレベル)**: `connectionStatus`, `bluetoothState`, `activeScreen`, `connectedDeviceId`, `theme`, `appLanguage`, `purchasedProducts` 等
+- **カメラ固有状態 (`cameraStates[deviceId]: CameraSpecificState`)**: `settings`, `capabilities`, `presets`, `hardwareInfo`, `wifiStatus`, `isEncoding`, `toastMessage`, `scheduledTime` 等
+
+カメラとの通信応答 (BLE Notify / Status / Settings) は、接続中の `connectedDeviceId` に紐づく `CameraSpecificState` を更新する。
+
+### Slice 構成と役割
+
+| Slice | ファイル | 役割・主な状態 |
+|-------|---------|---------------|
+| `ConnectionSlice` | `slices/connectionSlice.ts` | `connectionStatus`, `bluetoothState`, `activeScreen`, `connectedDeviceId`, `deviceConnectionStatuses` 等の接続・遷移制御 |
+| `CameraStateSlice` | `slices/cameraStateSlice.ts` | `cameraStates` (マルチデバイス状態マップ: `settings`, `capabilities`, `presets`, `hardwareInfo`, `wifiStatus`, `isEncoding`, `toastMessage` 等) およびステータス更新 |
+| `PresetSlice` | `slices/presetSlice.ts` | プリセットメタ情報 (`customName`, `iconId`, `basePresetId`) の永続化・SQLite キャッシュマージ処理 |
+| `UiSettingsSlice` | `slices/uiSettingsSlice.ts` | アプリレベルの UI 設定 (`theme`, `appLanguage`, `columnCount`, `bypassCapabilityCache`), デバッグログフラグ (`debugLogBle*`), IAP状態 (`purchasedProducts`) |
 
 ### 主要ステートフィールド
 
-| フィールド | 型 | 説明 |
-|-----------|---|------|
-| `connectionStatus` | `'disconnected' \| 'scanning' \| 'connected'` | BLE 接続状態 |
-| `wifiStatus` | `'disconnected' \| 'connecting' \| 'connected'` | Wi-Fi 接続状態 |
-| `activeScreen` | `'home' \| 'control'` | 現在画面 |
-| `connectedDeviceId` | `string \| null` | 接続中カメラの BLE ID |
-| `isEncoding` | `boolean` | Status 10 |
-| `captureDelayActive` | `boolean` | Status 101 |
-| `recordingTimeSec` | `number` | Status 13 |
-| `isReady` | `boolean` | Status 82 |
-| `systemBusy` | `boolean` | Status 8 |
-| `cameraControlStatus` | `'idle' \| 'camera' \| 'external' \| 'cofSetup'` | Status 114 |
-| `pendingSettings` | `Record<number, number>` | カメラ通知待ちの期待値 |
-| `settings` | `Record<number, number>` | 現在値 |
-| `capabilities` | `Record<number, number[]>` | live capability 値 |
-| `isRefreshingCapabilities` | `boolean` | capability 取得中表示 |
-| `capabilityCache` | `Record<string, Record<number, number[]>>` | request 単位で永続化する capability cache |
-| `capabilityCacheKey` | `string \| null` | 旧方式互換で保持している state。現在は cache 保存の authoritative source ではない |
-| `presets` | `GoProPresetGroupData[]` | Protobuf プリセット一覧 |
-| `hardwareInfo` | `HardwareInfo \| null` | 0x3C 由来のハードウェア情報 |
-| `cameraModel` | `CameraModelKey` | `modelNo` から導出した互換キー |
-| `scheduledTime` | `{ hour: number; minute: number } \| null` | Scheduled Capture 時刻 |
-| `toastMessage` | `string \| null` | 軽量 UI 通知 |
+| フィールド | 格納場所 / Slice | 型 | 説明 |
+|-----------|-----------------|---|------|
+| `connectionStatus` | トップレベル / Connection | `'disconnected' \| 'scanning' \| 'connected'` | BLE 接続状態 |
+| `activeScreen` | トップレベル / Connection | `'home' \| 'control'` | 現在表示画面 |
+| `connectedDeviceId` | トップレベル / Connection | `string \| null` | 接続中カメラの BLE ID |
+| `theme` | トップレベル / UiSettings | `AppTheme` | アプリ表示テーマ |
+| `appLanguage` | トップレベル / UiSettings | `AppLocale` | UI 表示言語 |
+| `purchasedProducts` | トップレベル / UiSettings | `string[]` | In-App Purchase 購入済みアイテム |
+| `wifiStatus` | `CameraSpecificState` / CameraState | `'disconnected' \| 'connecting' \| 'connected'` | Wi-Fi 接続状態 |
+| `hardwareInfo` | `CameraSpecificState` / CameraState | `HardwareInfo \| null` | 0x3C 由来のハードウェア情報 |
+| `settings` | `CameraSpecificState` / CameraState | `Record<number, number>` | 現在の設定値マップ |
+| `pendingSettings` | `CameraSpecificState` / CameraState | `Record<number, number>` | カメラ通知待ちの期待値マップ |
+| `capabilities` | `CameraSpecificState` / CameraState | `Record<number, number[]>` | live capability 値マップ |
+| `capabilityCache` | `CameraSpecificState` / CameraState | `Record<string, Record<number, number[]>>` | request 単位で永続化する capability cache |
+| `presets` | `CameraSpecificState` / CameraState | `GoProPresetGroupData[]` | Protobuf プリセット一覧 |
+| `isEncoding` | `CameraSpecificState` / CameraState | `boolean` | Status 10 (録画中フラグ) |
+| `captureDelayActive` | `CameraSpecificState` / CameraState | `boolean` | Status 101 |
+| `recordingTimeSec` | `CameraSpecificState` / CameraState | `number` | Status 13 (録画経過秒数) |
+| `isReady` | `CameraSpecificState` / CameraState | `boolean` | Status 82 |
+| `systemBusy` | `CameraSpecificState` / CameraState | `boolean` | Status 8 |
+| `cameraControlStatus` | `CameraSpecificState` / CameraState | `'idle' \| 'camera' \| 'external' \| 'cofSetup'` | Status 114 |
+| `scheduledTime` | `CameraSpecificState` / CameraState | `{ hour: number; minute: number } \| null` | Scheduled Capture 時刻 |
+| `toastMessage` | `CameraSpecificState` / CameraState | `string \| null` | カメラ固有の UI トースト通知 |
+
+> **注記 (`cameraModel`)**:
+> ストア直下には `cameraModel` フィールドは存在しません。`hardwareInfo.modelNo` から `resolveCameraModelKeyFromModelNo()` または selector ヘルパー (`useCurrentModelNo()`) を介して都度導出されます。
 
 ### 主要アクション
 
-| アクション | 用途 |
-|-----------|------|
-| `batchUpdateSettings(entries)` | TLV settings 応答を 1 回の `set()` で反映 |
-| `batchUpdateCapabilities(entries)` | live capabilities のみを更新 |
-| `mergeCapabilityCacheEntry(cacheKey, entries)` | request に紐づく capability cache を明示更新 |
-| `setPendingSetting(id, expectedValue)` / `clearPendingSetting(id)` | optimistic UI と確認待ち管理 |
-| `setCapabilityCache(cache)` | SQLite から復元した capability cache を store へ投入 |
-| `setPresets(groups)` | customName / iconId を保持しながらプリセット一覧更新 |
-| `beginDisconnect()` / `clearConnectedCameraState()` | 切断フェーズを 2 段階で進める |
+| アクション | Slice | 用途 |
+|-----------|-------|------|
+| `batchUpdateSettings(entries)` | CameraState | TLV settings 応答を 1 回の `set()` で反映 |
+| `batchUpdateCapabilities(entries)` | CameraState | live capabilities のみを更新 |
+| `mergeCapabilityCacheEntry(cacheKey, entries)` | CameraState | request に紐づく capability cache を明示更新 |
+| `setPendingSetting(id, expectedValue)` / `clearPendingSetting(id)` | CameraState | optimistic UI と確認待ち管理 |
+| `setCapabilityCache(cache)` | CameraState | SQLite から復元した capability cache を store へ投入 |
+| `setPresets(groups)` | Preset | customName / iconId を保持しながらプリセット一覧更新 |
+| `beginDisconnect()` / `clearConnectedCameraState()` | Connection | 切断フェーズを 2 段階で進める |
 
 ### パフォーマンス設計
 
 - BLE の TLV 応答は `batchUpdateSettings()` / `batchUpdateCapabilities()` で一括反映する
-- UI 側は `useShallow` と selector を使い、無関係な更新による再レンダリングを抑える
-- `pendingSettings` を別スライスで持ち、実値 (`settings`) を汚さずに optimistic UI を構成する
+- UI 側は `useShallow` と Slice 別 selector を使い、無関係な更新による再レンダリングを抑える
+- `pendingSettings` を別領域で持ち、実値 (`settings`) を汚さずに optimistic UI を構成する
 
 ## HardwareInfo 型
 

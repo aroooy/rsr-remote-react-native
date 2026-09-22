@@ -1,11 +1,18 @@
 # BLE 通信仕様
 
 ## 対象ファイル
-- [src/ble/GoProBLEManager.ts](../../src/ble/GoProBLEManager.ts)
-- [src/ble/PacketParser.ts](../../src/ble/PacketParser.ts)
-- [src/ble/PresetProtobuf.ts](../../src/ble/PresetProtobuf.ts)
-- [src/ble/CommandQueue.ts](../../src/ble/CommandQueue.ts)
-- [src/device/CapabilityCacheRepository.ts](../../src/device/CapabilityCacheRepository.ts)
+- [src/ble/GoProBLEManager.ts](../../src/ble/GoProBLEManager.ts) — 通信オーケストレーション
+- [src/ble/bleCommandPackets.ts](../../src/ble/bleCommandPackets.ts) — バイナリパケット構築
+- [src/ble/bleResponseCodec.ts](../../src/ble/bleResponseCodec.ts) — 応答・通知パケットデコード
+- [src/ble/bleErrorHandler.ts](../../src/ble/bleErrorHandler.ts) — エラー分類・ログ記録・自動復旧
+- [src/ble/capabilityManager.ts](../../src/ble/capabilityManager.ts) — ケーパビリティ評価・比較・キー射影
+- [src/ble/capabilityPlanning.ts](../../src/ble/capabilityPlanning.ts) — ケーパビリティ再取得計画生成
+- [src/ble/commandQueueRules.ts](../../src/ble/commandQueueRules.ts) — コマンドキューゲーティング・判定純粋関数
+- [src/ble/CommandQueue.ts](../../src/ble/CommandQueue.ts) — コマンド実行キュー
+- [src/ble/PacketParser.ts](../../src/ble/PacketParser.ts) — 低レイヤーヘッダ解析・再組立
+- [src/ble/PresetProtobuf.ts](../../src/ble/PresetProtobuf.ts) — Protobuf 手書き enc/dec
+- [src/device/CapabilityCacheRepository.ts](../../src/device/CapabilityCacheRepository.ts) — ケーパビリティキャッシュの SQLite 永続化
+- [src/constants/Timeouts.ts](../../src/constants/Timeouts.ts) — 通信タイマー・デバウンス定数
 
 ## GoPro BLE サービス / キャラクタリスティック
 
@@ -23,25 +30,25 @@ GoPro は単一の GATT サービス内に 6 つのキャラクタリスティ�
 ## 接続フロー
 
 ```
-1. BLE接続 (Android: 3回リトライ)
+1. BLE接続 (Android: 3回リトライ、bleErrorHandler がエラーを分類)
 2. MTU拡張 (Android限定: 512バイト要求)
-3. GATT安定待機 (500ms delay)
+3. GATT安定待機 (Timeouts.GATT_STABILIZE_MS delay)
 4. サービスディスカバリ
 5. Notify購読 (QUERY/CMD/SETTINGS各notify)
-6. HardwareInfo取得 (コマンド 0x3C)
+6. HardwareInfo取得 (コマンド 0x3C via bleCommandPackets)
 7. 永続キャッシュ復元
    a. KnownDevice から HardwareInfo を hydrate
    b. PresetMetaCache / CapabilityCache を SQLite から store へ復元
-8. modelNo ベースで cameraModel を確定
-9. KeepAlive開始 (15秒間隔: [0x01, 0x00])
-10. Boot window 開始 (3秒)
+8. modelNo ベースで cameraModel を確定 (manifest 参照)
+9. KeepAlive開始 (Timeouts.KEEP_ALIVE_INTERVAL_MS 間隔: [0x01, 0x00])
+10. Boot window 開始 (Timeouts.BOOT_WINDOW_MS)
   a. `isBooting = true` の間は capability cache key を生成しない
   b. capability 要求は `deferredCapabilityIds` に退避する
 11. Bootstrap:
   a. allSettingsQuery ([0x01, 0x12]) — 全設定値取得
   b. settings/status refresh ([0x01, 0x52], [0x01, 0x53])
   c. presetStatus (Protobuf) — プリセット一覧取得
-12. Boot window 終了後、quick setting 用 capability と deferred 要求をまとめて flush
+12. Boot window 終了後、quick setting 用 capability と deferred 要求をまとめて flush (capabilityManager 経由)
 ```
 
 ## パケットフォーマット
@@ -193,10 +200,14 @@ ${modelName}_${firmware}_P${preset}_MF${mediaFormat}_FR${framing}_R${res}_F${fps
 - `shortTermBusy -> ready` 遷移時: quick setting IDs と `deferredCapabilityIds` を union して再取得
 - boot 3秒タイマー満了時: quick setting IDs と `deferredCapabilityIds` を union して再取得
 
-### PacketParser との責務分離
+### モジュール別の責務分離
 
-`PacketParser.ts` の `0x32` 応答処理は live `capabilities` を更新しつつ、応答 batch を `GoProBLEManager` に返す。
-request と response の対応付け、および cache key ごとの `mergeCapabilityCacheEntry()` / `saveCapabilityCache()` 呼び出しは `GoProBLEManager` 側の request 単位ロジックが担当する。
+- `bleCommandPackets.ts`: コマンド・クエリ・設定書き込み用のバイナリバイト列構築を純粋関数として担当。
+- `bleResponseCodec.ts`: 受信データのヘッダ解析 (`PacketParser.ts` 経由) から TLV / Protobuf ペイロードのデコード (`parseQueryResponse`, `parseCmdResponse`) を担当。
+- `capabilityManager.ts`: キャッシュキーの構築 (`buildCapabilityCacheKey`)、キャッシュヒット/ミス判定、差分マージ、および live capabilities の比較・評価純粋ロジックを担当。
+- `capabilityPlanning.ts`: プリセット変更や設定更新に伴うケーパビリティ再取得対象設定 ID のプラン生成を担当。
+- `bleErrorHandler.ts`: BLE 通信エラー (GATT エラー、接続切れ、タイムアウト等) の統一分類・ログ記録・リトライやユーザーダイアログ連携などの統合復旧ハンドリングを担当。
+- `GoProBLEManager.ts`: 通信シーケンスのオーケストレーション、Zustand ストアとの接続、および `CommandQueue` との連携を担当。
 
 ## Capability 自動リフレッシュ
 

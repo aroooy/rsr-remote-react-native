@@ -85,7 +85,22 @@ npx expo install --check
 
 根本原因はライブラリのバグだったが、あわせて以下のコード改善を適用した。
 
-#### `GoProStore.ts` / `GoProBLEManager.ts`: 切断時 state 更新を1回の `set()` に集約
+#### `bleErrorHandler.ts`: BLE エラー分類と自動復旧の一元管理
+
+BLE 通信中の例外 (GATTエラー、書き込み失敗、タイムアウト、接続切断) は `src/ble/bleErrorHandler.ts` にて統一分類・処理される。
+
+- `handleBleError(error, context)`: エラーの種類を判別 (`BLEErrorType.DISCONNECTED`, `TIMEOUT`, `GATT_ERROR` 等)
+- エラーの種類に応じた適切なログ出力 (`debugLogging`) と UI トースト表示通知、および再接続・再試行シーケンスの制御を集中実施。
+
+#### `debugLogging.ts`: カテゴリベースのデバッグログ基盤
+
+デバッグログ出力をカテゴリ単位で制御する基盤。`src/utils/debugLogging.ts` に集中管理。
+
+- `setCategoryEnableProvider(provider)`: カテゴリごとのログ有効/無効を制御する関数を注入
+- `debugLog / debugDebug / debugWarn / debugError`: カテゴリ付きログ出力 (`ble`, `wifi`, `storage`, `ui` 等)
+- 各モジュールは `GoProStore` を直接参照せず、カテゴリ付きログ関数だけでデバッグ出力が可能。
+
+#### `GoProStore.ts` (connectionSlice): 切断時 state 更新を1回の `set()` に集約
 
 **変更前**: 切断時に6回の個別 `set()` を呼び出していた
 
@@ -112,9 +127,7 @@ beginDisconnect: () => set({
 // Phase 2 は App.js の InteractionManager.runAfterInteractions() 内で呼ばれる
 clearConnectedCameraState: () => set({
   activeScreen: 'home',
-  cameraModel: 'unknown',
-  hardwareInfo: null,
-  pendingSettings: {},
+  connectedDeviceId: null,
 }),
 ```
 

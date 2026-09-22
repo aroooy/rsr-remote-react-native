@@ -1,8 +1,8 @@
 # UI 構造とレンダリング
 
 ## 対象ファイル
-- [src/components/SettingsPanel.tsx](../../src/components/SettingsPanel.tsx)
-- [src/components/settingsPanel](../../src/components/settingsPanel)
+- [src/components/SettingsPanel.tsx](../../src/components/SettingsPanel.tsx) — メインUI facade・オーケストレーション
+- [src/components/settingsPanel](../../src/components/settingsPanel) — UIサブコンポーネントおよび表示状態解決ヘルパー
 - [App.js](../../App.js)
 
 ## 画面遷移
@@ -32,7 +32,7 @@ App.js
 
 ## SettingsPanel 構造
 
-`SettingsPanel.tsx` は現在、巨大な機種別分岐の置き場ではなく、UI orchestration と generic rendering の facade です。model-specific な UI 判定は主に `src/components/settingsPanel/*.ts` と `src/cameraModels/<model>/*.ts` に移しています。
+`SettingsPanel.tsx` は現在、巨大な一枚岩のファイルではなく、UI orchestration と状態バインディングを担う facade です。各種 UI セクション・設定行・モーダルは `src/components/settingsPanel/` 配下のサブコンポーネントに分離されています。
 
 SettingsPanel は上から下に以下のセクションで構成される:
 
@@ -41,24 +41,26 @@ SettingsPanel は上から下に以下のセクションで構成される:
 │ ヘッダー行                             │
 │ "Camera Settings"  [Live Preview] [Visible Items] [⏻] │
 ├───────────────────────────────────────┤
-│ モードセレクター                       │
+│ モードセレクター (PresetGroupGrid)    │
 │ [Video] [Photo] [Timelapse]            │
 │ プリセットチップ (横スクロール)          │
 ├───────────────────────────────────────┤
-│ Framing セレクター (Video時のみ)       │
-│ [16:9] [9:16] [4:3] [8:7]             │
+│ ResolutionFramingSection              │
+│  - Framing セレクター (16:9/9:16/4:3/8:7)│
+│  - Resolution セレクター (5.3K/4K/2.7K)│
 ├───────────────────────────────────────┤
-│ Primary Settings (トグルボタン行)      │
+│ Primary Setting (PrimarySettingRow)   │
 │ 横スクロール、ラベルチップ              │
 ├───────────────────────────────────────┤
-│ Shooting Settings                      │
-│ ISO, WB, EV, Sharpness 等の撮影設定    │
-├───────────────────────────────────────┤
-│ Camera Settings                        │
-│ Auto Off, LED, GPS 等のデバイス設定     │
+│ SettingsSectionGroup (Shooting/Camera)│
+│ OtherSettingRow (ISO, WB, EV, GPS 等) │
+│ SpecialRowView (Easy / Special Row)   │
 ├───────────────────────────────────────┤
 │ Dashboard Controls (Hero13のみ)        │
 │ Override スイッチ + サブ設定            │
+├───────────────────────────────────────┤
+│ ShutterButtonRow (最下部固定)         │
+│ シャッターボタン / 録画時間表示          │
 └───────────────────────────────────────┘
 ```
 
@@ -66,56 +68,56 @@ SettingsPanel は上から下に以下のセクションで構成される:
 
 Zustand ストアの `isEncoding` ステート（ステータスID 10 を監視）に連携してUIの動的ロックを行う:
 - 録画処理が始まると、設定に関連する全コンポーネントの親Viewに対して `pointerEvents="none"` および `opacity: 0.5` を付与し、意図せぬ設定変更をハードウェアレベルでブロック。
-- 画面最下部に固定配置されたシャッター関連のUIのみがアクティブとなり、録画時間（ステータスID 13 で更新）を表示する。
+- 画面最下部に固定配置されたシャッター関連のUI (`ShutterButtonRow`) のみがアクティブとなり、録画時間（ステータスID 13 で更新）を表示する。
 
-## レンダリングタイプ
+## レンダリングタイプとサブコンポーネント分割
 
-`renderOtherItem(settingId)` はまず `resolveOtherItemState()` で描画状態を解決し、その結果に応じて UI を分岐する:
+`SettingsPanel.tsx` から抽出されたサブコンポーネントおよび helper モジュールの一覧:
 
-| 条件 | UI コンポーネント | 例 |
-|------|-----------------|---|
-| `sliderConfig` あり | `SliderSettingRow` | LCD Brightness |
-| `isBool: true` | `Switch` | GPS, MaxLensMod |
-| `SCHEDULED_CAPTURE` | Switch + 時刻表示 + ピッカー | Scheduled Capture |
-| デフォルト | TouchableOpacity → モーダル | Resolution, FPS 等 |
-
-### SliderSettingRow
-- PanResponder ベースの自作 Slider
-- `SliderConfig`: `{ min, max, step, formatValue }`
-- LCD Brightness のみ使用 (10-100%, step 5)
-
-## 現在の helper 分割
-
-SettingsPanel で頻繁に増殖しやすかった model-specific 処理は、以下の facade に分離している。
-
-| helper | 役割 |
+| モジュール / サブコンポーネント | 役割・表示要素 |
 |---|---|
+| `settingsPanel/PrimarySettingRow.tsx` | 上部トグルボタン行（FPS, Lens, Profile 等）の描画 |
+| `settingsPanel/ResolutionFramingSection.tsx` | Quick Settings 上部の Resolution および Framing (アスペクト比) セレクター行 |
+| `settingsPanel/OtherSettingRow.tsx` | Shooting / Camera Settings 内の各 1 行描画 (モーダル起動 / Switch / スライダー) |
+| `settingsPanel/SpecialRowView.tsx` | Easy モードおよび Easy TimeWarp などの特殊合成行の描画 |
+| `settingsPanel/SettingsSectionGroup.tsx` | セクションごとのグループ外枠カード描画 |
+| `settingsPanel/ShutterButtonRow.tsx` | 画面最下部の録画開始/停止ボタンおよび録画タイマー表示 |
+| `settingsPanel/PresetGroupGrid.tsx` | Video / Photo / Timelapse モード切り替えボタンおよびプリセットチップ横スライド |
+| `settingsPanel/SettingOptionModal.tsx` | 設定値を一覧選択するボトムシート/ダイアログモーダル |
+| `settingsPanel/VisibilityControlModal.tsx` | アクションシート項目の表示/非表示を切り替える設定モーダル |
+| `settingsPanel/PresetRenameModal.tsx` | ユーザー定義プリセットの名前・アイコンを変更するリネームモーダル |
+| `settingsPanel/TimePickerModal.tsx` | Scheduled Capture 用の時刻選択ピッカーモーダル |
 | `settingsPanel/framingSelector.ts` | Framing row の表示可否と option 解決 |
 | `settingsPanel/resolutionSelector.ts` | Resolution row の表示可否と値候補解決 |
 | `settingsPanel/otherItemState.ts` | 各 setting row の kind / disabled 状態解決 |
 | `settingsPanel/specialRows.ts` | Easy / special row descriptor の解決 |
 
-`SettingsPanel.tsx` 側には「store から状態を読む」「helper を呼ぶ」「generic renderer で描画する」責務だけを残す。
+`SettingsPanel.tsx` 側には「Zustand ストアから状態を読む」「各サブコンポーネントに Props を渡して配置する」オーケストレーションの責務のみが残されている。
 
-## モーダル (3種)
+## モーダル (4種)
 
-### 1. 値選択モーダル
+### 1. 値選択モーダル (`SettingOptionModal.tsx`)
 - 設定タップで表示
 - `FlatList` で capability に含まれる値のみ一覧
 - 値タップで `goProBle.setSetting()` 呼び出し → モーダル閉じる
 - オーバーレイタップで閉じる (Pressable)
 
-### 2. Visible Items モーダル
+### 2. Visible Items モーダル (`VisibilityControlModal.tsx`)
 - ヘッダーの "Visible Items" ボタンから表示
 - Shooting Settings / Camera Settings の 2 セクション
 - 各設定の Switch で表示/非表示を切り替え
 - SQLite (`SettingVisibilityRepository`) で永続化
 - デバイス×プリセットごとに独立管理
 
-### 3. Scheduled Capture 時刻ピッカー
+### 3. Scheduled Capture 時刻ピッカー (`TimePickerModal.tsx`)
 - Scheduled Capture の Switch が ON のとき時刻表示をタップで表示
 - Hour (0-23) × Minute (0-55, 5分刻み) の 2 列 ScrollView
 - 選択で `goProBle.setScheduledTime(hour, minute)` 呼び出し
+
+### 4. プリセットリネームモーダル (`PresetRenameModal.tsx`)
+- ユーザー定義プリセット (`userDefined === true`) の長押しで表示 (HERO12/13/MAX2 対応)
+- プリセット名 (`customName`, 最大 16 文字) とアイコン (`iconId`) を変更
+- `goProBle.renameActivePreset(name, iconId)` で protobuf (0xF1) 変更要求を送信
 
 ## Capability オンデマンド取得
 
