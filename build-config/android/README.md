@@ -114,7 +114,7 @@ Google Service Account JSON key も必要。
 `rsr-remote.keystore` を紛失すると、Play Store の同一アプリの
 更新ができなくなる (別アプリとして新規登録するしかなくなる)。
 
-- 現在の保管場所: `/Users/hiroaki/Library/Developer/Xamarin/Keystore/rsr-remote/rsr-remote.keystore`
+- 現在の保管場所: `/Users/hiroaki/.android/keystores/rsr-remote/rsr-remote.keystore`
 - パスワード保管: (社内の安全な場所)
 - **複数拠点にバックアップを取ること**
 
